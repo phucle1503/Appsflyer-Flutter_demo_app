@@ -22,7 +22,7 @@ Mobile:
     - In App  (done)
     - Rich Push
     - Push Impression (done)
-    - MSG-PUSH
+    - MSG-PUSH (done)
     - Pull Notification
     - Native Display
     - App Inbox  (done)

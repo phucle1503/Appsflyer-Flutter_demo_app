@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 
-class Loginpage1 extends StatefulWidget {
-  const Loginpage1({super.key});
+class TestPage extends StatefulWidget {
+  const TestPage({super.key});
 
   @override
-  State<Loginpage1> createState() => _Loginpage1State();
+  State<TestPage> createState() => _TestPageState();
 }
 
-class _Loginpage1State extends State<Loginpage1> {
+class _TestPageState extends State<TestPage> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -640,6 +641,11 @@ class _Loginpage1State extends State<Loginpage1> {
 
     if (profile.isNotEmpty) {
       await CleverTapPlugin.onUserLogin(profile);
+
+          /// 🚀 Gán ct_objectId vào Firebase user property
+      CleverTapPlugin.getCleverTapID().then((ctId) {
+        FirebaseAnalytics.instance.setUserProperty(name: 'ct_objectId', value: ctId);
+      });
       if (profile.containsKey('Identity')) {
         setState(() {
           _currentIdentity = profile['Identity'];

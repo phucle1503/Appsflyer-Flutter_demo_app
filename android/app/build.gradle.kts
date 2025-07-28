@@ -36,7 +36,6 @@ android {
             )
         }
     }
-
 }
 
 flutter { source = "../.." }
@@ -44,6 +43,7 @@ flutter { source = "../.." }
 dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.3.1"))
     implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
 
     implementation("com.clevertap.android:clevertap-android-sdk:7.4.0")
     implementation("com.clevertap.android:push-templates:2.0.0")
