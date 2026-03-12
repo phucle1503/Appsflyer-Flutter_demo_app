@@ -1,6 +1,6 @@
-name: cgv_demo_flutter_firebase
+name: af_flutter_sample
 description: A Flutter app with Firebase reuse
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -9,18 +9,17 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
   cupertino_icons: ^1.0.2
   clevertap_plugin: 3.3.1
-  geolocator: ^14.0.1      
-  permission_handler: ^12.0.0 
+  geolocator: ^14.0.1
+  permission_handler: ^12.0.0
   firebase_core: ^3.14.0
   firebase_messaging: ^15.2.7
   url_launcher: ^6.3.1
   shared_preferences: ^2.2.2
   firebase_analytics: ^11.5.2
-
-
+  appsflyer_sdk: ^6.17.8
 
 dev_dependencies:
   flutter_test:

@@ -15,7 +15,7 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
-Mobile: 
+android: 
     - Basic Integration (done)
     - Events & user properties (done)
     - Mobile Push (done)
@@ -26,7 +26,11 @@ Mobile:
     - Pull Notification
     - Native Display
     - App Inbox  (done)
-    - App Uninstall(Android)
     - Push Primer  (done)
     - Push Template (done)
     - Geofence  (done)
+    - App Uninstall(Android): Cần upgrade firebase console lên Blaze plan để tracking real-time uninstall.
+    Command: firebase deploy --only functions
+    Error: Your project clevertap-android-c74c1 must be on the Blaze (pay-as-you-go) plan to complete this command. Required API artifactregistry.googleapis.com can't be enabled until the upgrade is complete. To upgrade, visit the following URL:  https://console.firebase.google.com/project/clevertap-android-c74c1/usage/details
+
+    Đã xong native display ở tầng android -> render UI ở test_page.dart

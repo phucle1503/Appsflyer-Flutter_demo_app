@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "466349742118",
-    "project_id": "clevertap-android-c74c1",
-    "storage_bucket": "clevertap-android-c74c1.firebasestorage.app"
+    "project_number": "397393479336",
+    "project_id": "af---flutter",
+    "storage_bucket": "af---flutter.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:466349742118:android:934d4f3cc1f39cabc96ee7",
+        "mobilesdk_app_id": "1:397393479336:android:7934c2405945747787649d",
         "android_client_info": {
-          "package_name": "aka.digital.cgv_demo_v2"
+          "package_name": "com.af_flutter_sample"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBnCLWCB0u7GSy0K2_PU8ezDfW0LvvCCqA"
+          "current_key": "AIzaSyAwkguC7jcI4aGaxS7uhvNNZvNEK9oJFYc"
         }
       ],
       "services": {

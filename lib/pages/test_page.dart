@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-
+import 'package:appsflyer_sdk/appsflyer_sdk.dart';
+import 'package:af_flutter_sample/services/appsflyer_service.dart';
 
 class TestPage extends StatefulWidget {
   const TestPage({super.key});
@@ -13,17 +13,10 @@ class TestPage extends StatefulWidget {
 }
 
 class _TestPageState extends State<TestPage> {
-  final TextEditingController _idController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _eventNameController = TextEditingController();
-  final TextEditingController _panelIdController = TextEditingController();
-  final CleverTapPlugin _cleverTapPlugin = CleverTapPlugin(); 
+  final CleverTapPlugin _cleverTapPlugin = CleverTapPlugin();
+  final _appsflyerSdk = AppsFlyerService().sdk;
 
-  String _cleverTapId = '';
-  String _panelId = '485-766-KW7Z';
-
-  bool _isEditingPanelId = false;
   bool inboxInitialized = false;
   bool _isOptedOut = false;
   bool _reportNetworkInfo = true;
@@ -32,30 +25,15 @@ class _TestPageState extends State<TestPage> {
   int _currentIndex = 0;
 
   List<Map<String, dynamic>> _eventProperties = [_createProperty()];
-
-  List<Map<String, dynamic>> _userProperties = [_createProperty()];
-
-  String _currentIdentity = '';
   List<String> _recentActions = [];
 
   @override
   void initState() {
     super.initState();
     _loadGdprSettings();
-    _loadPanelId();
     _initializeInboxHandlers();
     CleverTapPlugin.initializeInbox();
     _recentActions.add('${_formatTime(DateTime.now())}: CleverTap initialized');
-
-      CleverTapPlugin.getCleverTapID().then((id) {
-        setState(() {
-          _cleverTapId = id ?? '';
-        });
-      }).catchError((error) {
-        setState(() {
-          _cleverTapId = 'Error: $error';
-        });
-      });
   }
 
   Future<void> _loadGdprSettings() async {
@@ -112,7 +90,7 @@ class _TestPageState extends State<TestPage> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('CleverTap Demo')),
+      appBar: AppBar(title: const Text('AppsFlyer Demo')),
       body: _tabs[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -120,67 +98,13 @@ class _TestPageState extends State<TestPage> {
         unselectedItemColor: Colors.grey,
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Custom UA - EA'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance), label: 'Event Sample'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: 'Custom UA - EA'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance), label: 'Event Sample'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.settings), label: 'Settings'),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCleverTapStatusSection({bool editable = false}) {
-    return Card(
-      color: Colors.blue.shade50,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('CleverTap Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 8),
-            editable && _isEditingPanelId
-                ? Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _panelIdController,
-                          decoration: const InputDecoration(labelText: 'Edit Panel ID'),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.check),
-                        onPressed: () async {
-                          final newId = _panelIdController.text.trim();
-                          await _savePanelId(newId);
-                          setState(() {
-                            _panelId = newId;
-                            _isEditingPanelId = false;
-                          });
-                        },
-                      ),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Text('Panel ID: $_panelId'),
-                      if (editable)
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            setState(() {
-                              _panelIdController.text = _panelId;
-                              _isEditingPanelId = true;
-                            });
-                          },
-                        ),
-                    ],
-                  ),
-            Text('CT_Id: $_cleverTapId'),
-            Text('Identity: ${_currentIdentity.isEmpty ? '' : _currentIdentity}'),
-            const Text('Recent Actions:'),
-            ..._recentActions.map((action) => Text('• $action')),
-          ],
-        ),
       ),
     );
   }
@@ -190,85 +114,9 @@ class _TestPageState extends State<TestPage> {
       padding: const EdgeInsets.all(16.0),
       child: ListView(
         children: [
-        _buildCleverTapStatusSection(editable: false),
           const SizedBox(height: 20),
-          const Text('User Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 10),
-          _buildTextField(_idController, 'Identity'),
-          _buildTextField(_emailController, 'Email'),
-          _buildTextField(_phoneController, 'Phone'),
-          ..._userProperties.asMap().entries.map((entry) {
-            var prop = entry.value;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTextField(prop['keyController'], 'Property Key'),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: DropdownButtonFormField<String>(
-                        value: prop['type'],
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            prop['type'] = newValue!;
-                          });
-                        },
-                        items: ['String', 'Number', 'Boolean']
-                            .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                            .toList(),
-                        decoration: const InputDecoration(labelText: 'Data Type'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(width: 1, height: 50, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        controller: prop['valueController'],
-                        decoration: const InputDecoration(labelText: 'Property Value'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-              ],
-            );
-          }).toList(),
-
-          ElevatedButton.icon(
-            onPressed: () {
-              setState(() {
-                _userProperties.add(_createProperty());
-              });
-            },
-            icon: const Icon(Icons.add),
-            label: const Text("Add User Property"),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _onUserLogin,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('OnUserLogin'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _pushProfile,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                  child: const Text('Push Profile'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          const Text('Custom Event Builder', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Text('Custom Event Builder',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 10),
           _buildTextField(_eventNameController, 'Event Name'),
           ..._eventProperties.asMap().entries.map((entry) {
@@ -290,9 +138,11 @@ class _TestPageState extends State<TestPage> {
                           });
                         },
                         items: ['String', 'Number', 'Boolean']
-                            .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+                            .map((type) => DropdownMenuItem(
+                                value: type, child: Text(type)))
                             .toList(),
-                        decoration: const InputDecoration(labelText: 'Data Type'),
+                        decoration:
+                            const InputDecoration(labelText: 'Data Type'),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -302,7 +152,8 @@ class _TestPageState extends State<TestPage> {
                       flex: 3,
                       child: TextField(
                         controller: prop['valueController'],
-                        decoration: const InputDecoration(labelText: 'Property Value'),
+                        decoration:
+                            const InputDecoration(labelText: 'Property Value'),
                       ),
                     ),
                   ],
@@ -317,8 +168,8 @@ class _TestPageState extends State<TestPage> {
                 _eventProperties.add(_createProperty());
               });
             },
-            icon: const Icon(Icons.add), 
-            label: const Text("Add Event Property"), 
+            icon: const Icon(Icons.add),
+            label: const Text("Add Event Property"),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
@@ -326,7 +177,7 @@ class _TestPageState extends State<TestPage> {
               backgroundColor: Colors.orange,
               minimumSize: const Size.fromHeight(48),
             ),
-            onPressed: _sendCustomEvent,
+            onPressed: _sendCustomEvent_AF,
             child: const Text('Send Custom Event'),
           ),
         ],
@@ -340,17 +191,57 @@ class _TestPageState extends State<TestPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // af_login
           ElevatedButton.icon(
-            icon: const Icon(Icons.shopping_cart),
+            icon: const Icon(Icons.login),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.blue,
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            label: const Text('Charged Event'),
-            onPressed: _sendChargedEvent,
+            label: const Text('af_login'),
+            onPressed: _sendAfLoginEvent,
+          ),
+          const SizedBox(height: 16),
+
+          // af_complete_registration
+          ElevatedButton.icon(
+            icon: const Icon(Icons.app_registration),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            label: const Text('af_complete_registration'),
+            onPressed: _sendAfCompleteRegistrationEvent,
+          ),
+          const SizedBox(height: 16),
+
+          // open_account_success
+          ElevatedButton.icon(
+            icon: const Icon(Icons.verified),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            label: const Text('open_account_success'),
+            onPressed: _sendAfOpenAccountSuccessEvent,
+          ),
+          const SizedBox(height: 16),
+
+          // open_account_rejected
+          ElevatedButton.icon(
+            icon: const Icon(Icons.cancel),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            label: const Text('open_account_rejected'),
+            onPressed: _sendAfOpenAccountRejectedEvent,
           ),
           const SizedBox(height: 24),
-          const Text('⚙️ Coming soon: E-commerce Samples, Travel, Banking...'),
+
+          const Text(
+            '⚙️ Coming soon: E-commerce Samples, Travel, ...',
+          ),
         ],
       ),
     );
@@ -361,33 +252,36 @@ class _TestPageState extends State<TestPage> {
       padding: const EdgeInsets.all(16.0),
       child: ListView(
         children: [
-          _buildCleverTapStatusSection(editable: true),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _syncLocationToCleverTap,
             icon: const Icon(Icons.location_on),
-            label: const Text('Sync Location', style: TextStyle(color: Colors.white)),
+            label: const Text('Sync Location',
+                style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _showPushPrimer,
             icon: const Icon(Icons.notifications),
-            label: const Text('Show Push Primer', style: TextStyle(color: Colors.white)),
+            label: const Text('Show Push Primer',
+                style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _showAppInbox,
             icon: const Icon(Icons.mail),
-            label: const Text('Go to App Inbox', style: TextStyle(color: Colors.white)),
+            label: const Text('Go to App Inbox',
+                style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _checkAndRequestPushPermission,
             icon: const Icon(Icons.notifications),
-            label: const Text('Push Permission Dialog', style: TextStyle(color: Colors.white)),
+            label: const Text('Push Permission Dialog',
+                style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
           ),
           const SizedBox(height: 24),
@@ -398,23 +292,28 @@ class _TestPageState extends State<TestPage> {
               children: [
                 const Padding(
                   padding: EdgeInsets.all(12.0),
-                  child: Text('⚖️ GDPR Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  child: Text('⚖️ GDPR Settings',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 ),
                 SwitchListTile(
                   title: const Text('Cho phép theo dõi hành vi'),
-                  subtitle: const Text('Tắt nếu bạn muốn dừng gửi dữ liệu đến CleverTap'),
+                  subtitle: const Text(
+                      'Tắt nếu bạn muốn dừng gửi dữ liệu đến CleverTap'),
                   value: !_isOptedOut,
                   onChanged: (val) => _updateOptOut(!val),
                 ),
                 SwitchListTile(
                   title: const Text('Gửi thông tin mạng'),
-                  subtitle: const Text('Bật để cho phép gửi thông tin Wi-Fi, mạng...'),
+                  subtitle: const Text(
+                      'Bật để cho phép gửi thông tin Wi-Fi, mạng...'),
                   value: _reportNetworkInfo,
                   onChanged: _updateNetworkInfo,
                 ),
                 SwitchListTile(
                   title: const Text('Kết nối CleverTap'),
-                  subtitle: const Text('Tắt nếu bạn muốn tạm dừng gửi dữ liệu đến CleverTap'),
+                  subtitle: const Text(
+                      'Tắt nếu bạn muốn tạm dừng gửi dữ liệu đến CleverTap'),
                   value: !_isOffline,
                   onChanged: (val) => _updateOffline(!val),
                 ),
@@ -437,27 +336,17 @@ class _TestPageState extends State<TestPage> {
           filled: true,
           fillColor: Color.fromARGB(0, 89, 130, 173),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: const Color.fromARGB(255, 143, 152, 168)),
+            borderSide:
+                BorderSide(color: const Color.fromARGB(255, 143, 152, 168)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: const Color.fromARGB(255, 143, 152, 168), width: 2),
+            borderSide: BorderSide(
+                color: const Color.fromARGB(255, 143, 152, 168), width: 2),
           ),
           border: const OutlineInputBorder(),
         ),
       ),
     );
-  }
-
-  Future<void> _savePanelId(String panelId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('panel_id', panelId);
-  }
-
-  Future<void> _loadPanelId() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _panelId = prefs.getString('panel_id') ?? '485-766-KW7Z';
-    });
   }
 
   Future<void> _syncLocationToCleverTap() async {
@@ -473,7 +362,8 @@ class _TestPageState extends State<TestPage> {
     }
     if (perm == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Quyền truy cập vị trí bị từ chối vĩnh viễn.")),
+        const SnackBar(
+            content: Text("❌ Quyền truy cập vị trí bị từ chối vĩnh viễn.")),
       );
       return;
     }
@@ -488,15 +378,15 @@ class _TestPageState extends State<TestPage> {
       CleverTapPlugin.setLocation(p.latitude, p.longitude);
 
       CleverTapPlugin.recordEvent("Location Synced", {
-      "lat": p.latitude,
-      "lng": p.longitude,
-    });
+        "lat": p.latitude,
+        "lng": p.longitude,
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("🧭 Đã gửi vị trí: (${p.latitude}, ${p.longitude})")),
+        SnackBar(
+            content: Text("🧭 Đã gửi vị trí: (${p.latitude}, ${p.longitude})")),
       );
       print("🧭 Đã gửi vị trí: (${p.latitude}, ${p.longitude})");
-
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("❌ Lấy vị trí thất bại.")),
@@ -508,7 +398,8 @@ class _TestPageState extends State<TestPage> {
     var pushPrimerJSON = {
       'inAppType': 'half-interstitial',
       'titleText': 'Get Notified',
-      'messageText': 'Please enable notifications on your device to use Push Notifications.',
+      'messageText':
+          'Please enable notifications on your device to use Push Notifications.',
       'followDeviceOrientation': false,
       'positiveBtnText': 'Allow',
       'negativeBtnText': 'Cancel',
@@ -520,15 +411,17 @@ class _TestPageState extends State<TestPage> {
       'btnTextColor': '#000000',
       'btnBackgroundColor': '#FFFFFF',
       'btnBorderRadius': '4',
-      'imageUrl': 'https://media.licdn.com/dms/image/v2/C560BAQF34hDVYAkTPA/company-logo_200_200/company-logo_200_200/0/1661180193743?e=2147483647&v=beta&t=JB3TxPIt2t6byGsInkGfnAr736S3z8J4gyrZbRSM_Kc'
+      'imageUrl':
+          'https://media.licdn.com/dms/image/v2/C560BAQF34hDVYAkTPA/company-logo_200_200/company-logo_200_200/0/1661180193743?e=2147483647&v=beta&t=JB3TxPIt2t6byGsInkGfnAr736S3z8J4gyrZbRSM_Kc'
     };
 
     CleverTapPlugin.promptPushPrimer(pushPrimerJSON);
   }
 
   void _initializeInboxHandlers() {
-    _cleverTapPlugin.setCleverTapInboxDidInitializeHandler(inboxDidInitialize); 
-    _cleverTapPlugin.setCleverTapInboxMessagesDidUpdateHandler(inboxMessagesDidUpdate);
+    _cleverTapPlugin.setCleverTapInboxDidInitializeHandler(inboxDidInitialize);
+    _cleverTapPlugin
+        .setCleverTapInboxMessagesDidUpdateHandler(inboxMessagesDidUpdate);
   }
 
   void inboxDidInitialize() {
@@ -547,7 +440,8 @@ class _TestPageState extends State<TestPage> {
     if (!inboxInitialized) {
       debugPrint("❌ Inbox chưa sẵn sàng");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inbox chưa sẵn sàng. Vui lòng thử lại sau.')),
+        const SnackBar(
+            content: Text('Inbox chưa sẵn sàng. Vui lòng thử lại sau.')),
       );
       return;
     }
@@ -564,14 +458,16 @@ class _TestPageState extends State<TestPage> {
   }
 
   Future<void> _checkAndRequestPushPermission() async {
-    bool? isGranted = await CleverTapPlugin.getPushNotificationPermissionStatus();
+    bool? isGranted =
+        await CleverTapPlugin.getPushNotificationPermissionStatus();
     if (isGranted == null) {
       debugPrint("⚠️ Không lấy được trạng thái quyền push.");
       return;
     }
 
     if (!isGranted) {
-      const fallbackToSettings = false; // true: chuyển tới Settings nếu bị từ chối
+      const fallbackToSettings =
+          false; // true: chuyển tới Settings nếu bị từ chối
       CleverTapPlugin.promptForPushNotification(fallbackToSettings);
       debugPrint("📩 Hiển thị dialog xin quyền push...");
     } else {
@@ -582,136 +478,75 @@ class _TestPageState extends State<TestPage> {
     }
   }
 
-  void _sendChargedEvent() {
-    final chargeDetails = {
-      'Amount': 2599.98,
-      'Payment Mode': 'Credit Card',
-      'Charged ID': 'ORDER_${DateTime.now().millisecondsSinceEpoch}',
+  Future<void> _sendAfLoginEvent() async {
+    bool? result;
+    try {
+      result = await AppsFlyerService().sdk.logEvent(
+            "af_login",
+            null, // Không cần additional parameters
+          );
+    } on Exception catch (e) {
+      print("Error logging af_login: $e");
+    }
+    print("Result af_login: $result");
+  }
+
+  Future<void> _sendAfCompleteRegistrationEvent() async {
+    final Map<String, dynamic> eventValues = {
+      "af_registration_method": "Email",
     };
 
-    final itemData = {
-      'Product Id': 'P001',
-      'Product Name': 'Laptop Pro 15',
-      'Category': 'Electronics',
-      'Price': 1299.99,
-      'Quantity': 2,
+    bool? result;
+    try {
+      result = await AppsFlyerService().sdk.logEvent(
+            "af_complete_registration",
+            eventValues,
+          );
+    } on Exception catch (e) {
+      print("Error logging af_complete_registration: $e");
+    }
+    print("Result af_complete_registration: $result");
+  }
+
+  Future<void> _sendAfOpenAccountSuccessEvent() async {
+    final Map<String, dynamic> eventValues = {
+      "account_type": "savings",
+      "application_method": "app",
+      "PII_type": "identification card",
     };
 
-    CleverTapPlugin.recordChargedEvent(chargeDetails, [itemData]);
-
-    setState(() {
-      _recentActions.add('${_formatTime(DateTime.now())}: Charged Event');
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✅ Đặt hàng thành công!')),
-    );
+    bool? result;
+    try {
+      result = await AppsFlyerService().sdk.logEvent(
+            "open_account_success",
+            eventValues,
+          );
+    } on Exception catch (e) {
+      print("Error logging open_account_success: $e");
+    }
+    print("Result open_account_success: $result");
   }
 
-  void _onUserLogin() async {
-    final identity = _idController.text.trim();
-    final email = _emailController.text.trim();
-    final phone = _phoneController.text.trim();
+  Future<void> _sendAfOpenAccountRejectedEvent() async {
+    final Map<String, dynamic> eventValues = {
+      "account_type": "savings",
+    };
 
-    final Map<String, dynamic> profile = {};
-    if (identity.isNotEmpty) profile['Identity'] = identity;
-    if (email.isNotEmpty) profile['Email'] = email;
-    if (phone.isNotEmpty) profile['Phone'] = phone;
-
-    for (var prop in _userProperties) {
-      final key = prop['keyController'].text.trim();
-      final valueText = prop['valueController'].text.trim();
-      final type = prop['type'];
-      if (key.isEmpty || valueText.isEmpty) continue;
-
-      dynamic value;
-      switch (type) {
-        case 'Number':
-          value = num.tryParse(valueText);
-          break;
-        case 'Boolean':
-          if (valueText.toLowerCase() == 'true') value = true;
-          else if (valueText.toLowerCase() == 'false') value = false;
-          break;
-        default:
-          value = valueText;
-      }
-      if (value != null) profile[key] = value;
+    bool? result;
+    try {
+      result = await AppsFlyerService().sdk.logEvent(
+            "open_account_rejected",
+            eventValues,
+          );
+    } on Exception catch (e) {
+      print("Error logging open_account_rejected: $e");
     }
-
-    if (profile.isNotEmpty) {
-      await CleverTapPlugin.onUserLogin(profile);
-
-          /// 🚀 Gán ct_objectId vào Firebase user property
-      CleverTapPlugin.getCleverTapID().then((ctId) {
-        FirebaseAnalytics.instance.setUserProperty(name: 'ct_objectId', value: ctId);
-      });
-      if (profile.containsKey('Identity')) {
-        setState(() {
-          _currentIdentity = profile['Identity'];
-        });
-      }
-      setState(() {
-        _recentActions.add('${_formatTime(DateTime.now())}: onUserLogin');
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ Sent profile: $profile')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Không có trường dữ liệu nào được nhập.')),
-      );
-    }
+    print("Result open_account_rejected: $result");
   }
 
-  void _pushProfile() async {
-    final identity = _idController.text.trim();
-    final email = _emailController.text.trim();
-    final phone = _phoneController.text.trim();
-
-    final Map<String, dynamic> profile = {};
-    if (identity.isNotEmpty) profile['Identity'] = identity;
-    if (email.isNotEmpty) profile['Email'] = email;
-    if (phone.isNotEmpty) profile['Phone'] = phone;
-
-    for (var prop in _userProperties) {
-      final key = prop['keyController'].text.trim();
-      final valueText = prop['valueController'].text.trim();
-      final type = prop['type'];
-      if (key.isEmpty || valueText.isEmpty) continue;
-
-      dynamic value;
-      switch (type) {
-        case 'Number':
-          value = num.tryParse(valueText);
-          break;
-        case 'Boolean':
-          if (valueText.toLowerCase() == 'true') value = true;
-          else if (valueText.toLowerCase() == 'false') value = false;
-          break;
-        default:
-          value = valueText;
-      }
-      if (value != null) profile[key] = value;
-    }
-
-    if (profile.isNotEmpty) {
-      await CleverTapPlugin.profileSet(profile);
-      setState(() {
-        _recentActions.add('${_formatTime(DateTime.now())}: Push Profile');
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ Updated profile: $profile')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚠️ Không có trường dữ liệu nào được nhập.')),
-      );
-    }
-  }
-
-  void _sendCustomEvent() async {
+  void _sendCustomEvent_AF() async {
     final eventName = _eventNameController.text.trim();
+
     if (eventName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("⚠️ Vui lòng nhập Event Name")),
@@ -719,39 +554,65 @@ class _TestPageState extends State<TestPage> {
       return;
     }
 
+    // AppsFlyer giới hạn 45 ký tự
+    if (eventName.length > 45) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("⚠️ Event Name không được quá 45 ký tự")),
+      );
+      return;
+    }
+
     final Map<String, dynamic> properties = {};
+
     for (var prop in _eventProperties) {
       final key = prop['keyController'].text.trim();
       final valueText = prop['valueController'].text.trim();
       final type = prop['type'];
+
       if (key.isEmpty || valueText.isEmpty) continue;
 
       dynamic value;
+
       switch (type) {
         case 'Number':
           value = num.tryParse(valueText);
           break;
         case 'Boolean':
-          if (valueText.toLowerCase() == 'true') value = true;
-          else if (valueText.toLowerCase() == 'false') value = false;
+          if (valueText.toLowerCase() == 'true') {
+            value = true;
+          } else if (valueText.toLowerCase() == 'false') {
+            value = false;
+          }
           break;
         default:
           value = valueText;
       }
-      if (value != null) properties[key] = value;
+
+      if (value != null) {
+        properties[key] = value;
+      }
     }
 
     try {
-      await CleverTapPlugin.recordEvent(eventName, properties);
+      bool? result = await _appsflyerSdk.logEvent(
+        eventName,
+        properties.isEmpty ? null : properties,
+      );
+
       setState(() {
-        _recentActions.add('${_formatTime(DateTime.now())}: Send Event - $eventName');
+        _recentActions
+            .add('${_formatTime(DateTime.now())}: AF Event - $eventName');
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("✅ Event đã được gửi: $eventName\nPayload: $properties")),
+        SnackBar(
+          content: Text(
+              "✅ AppsFlyer Event đã gửi: $eventName\nPayload: $properties\nResult: $result"),
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Gửi event thất bại!")),
+        const SnackBar(content: Text("❌ Gửi AppsFlyer event thất bại!")),
       );
     }
   }

@@ -1,4 +1,4 @@
-package aka.digital.cgv_demo_v2;
+package com.af_flutter_sample;
 
 import android.app.Application;
 import com.clevertap.android.sdk.ActivityLifecycleCallback;

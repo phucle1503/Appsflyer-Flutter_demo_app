@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cgv_demo_flutter_firebase/pages/product_page.dart';
+import 'package:af_flutter_sample/pages/product_page.dart';
 import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -26,12 +26,12 @@ class PushService {
 
     final token = await FirebaseMessaging.instance.getToken();
     if (token != null) {
-      CleverTapPlugin.setPushToken(token);      
+      CleverTapPlugin.setPushToken(token);
       debugPrint('[FCM token] $token');
     }
 
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-      CleverTapPlugin.setPushToken(newToken);       
+      CleverTapPlugin.setPushToken(newToken);
       debugPrint('[FCM token refresh] $newToken');
     });
 
@@ -45,11 +45,11 @@ class PushService {
       _handleNotificationClick(m.data);
     });
 
-    _ct.setCleverTapPushClickedPayloadReceivedHandler(pushClickedPayloadReceived);
+    _ct.setCleverTapPushClickedPayloadReceivedHandler(
+        pushClickedPayloadReceived);
     FirebaseMessaging.onBackgroundMessage(_onBackground);
 
     _configureCleverTapChannel();
-
   }
 
   /* ---------------- HANDLER PUSH CLICK (từ CT callback) ------------- */
@@ -67,34 +67,35 @@ class PushService {
   }
 
   /* --------------------- NAVIGATION LOGIC --------------------------- */
-void _navigateByDeepLink(String link) async {
-  final uri = Uri.parse(link);
-  debugPrint('[DeepLink] URI = $uri');
-  debugPrint('[DeepLink] host=${uri.host}, path=${uri.path}');
+  void _navigateByDeepLink(String link) async {
+    final uri = Uri.parse(link);
+    debugPrint('[DeepLink] URI = $uri');
+    debugPrint('[DeepLink] host=${uri.host}, path=${uri.path}');
 
-  if (uri.scheme == 'abc') {
-    final path = uri.host.isNotEmpty ? uri.host : uri.path.replaceFirst('/', '');
+    if (uri.scheme == 'abc') {
+      final path =
+          uri.host.isNotEmpty ? uri.host : uri.path.replaceFirst('/', '');
 
-    switch (path) {
-      case 'cart':
-        _pushIfPossible(const Cartpage());
-        return;
-      case 'login':
-        _pushIfPossible(const Loginpage());
-        return;
-      case 'product':
-        _pushIfPossible(Productpage());
-        return;
-      default:
-        debugPrint('[DeepLink] Không tìm thấy path: $path');
-        return;
+      switch (path) {
+        case 'cart':
+          _pushIfPossible(const Cartpage());
+          return;
+        case 'login':
+          _pushIfPossible(const Loginpage());
+          return;
+        case 'product':
+          _pushIfPossible(Productpage());
+          return;
+        default:
+          debugPrint('[DeepLink] Không tìm thấy path: $path');
+          return;
+      }
+    }
+
+    if (['http', 'https'].contains(uri.scheme) && await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
-
-  if (['http', 'https'].contains(uri.scheme) && await canLaunchUrl(uri)) {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-}
 
   void _pushIfPossible(Widget page) {
     final ctx = navigatorKey.currentContext;
@@ -113,8 +114,10 @@ void _navigateByDeepLink(String link) async {
   /* ----------------- NOTIFICATION CHANNEL --------------------------- */
   void _configureCleverTapChannel() {
     if (Platform.isAndroid) {
-    CleverTapPlugin.createNotificationChannelWithSound(  'Flutter Test',  'Flutter Test',  'Flutter Test',  3,  true, 'sound1.mp3');
-    CleverTapPlugin.createNotificationChannelWithSound(  'Custom_Channel',  'Custom_Channel',  'Custom_Channel',  3,  true, 'lmao.mp3');
+      CleverTapPlugin.createNotificationChannelWithSound('Flutter Test',
+          'Flutter Test', 'Flutter Test', 3, true, 'sound1.mp3');
+      CleverTapPlugin.createNotificationChannelWithSound('Custom_Channel',
+          'Custom_Channel', 'Custom_Channel', 3, true, 'lmao.mp3');
     }
     CleverTapPlugin.setDebugLevel(4);
   }

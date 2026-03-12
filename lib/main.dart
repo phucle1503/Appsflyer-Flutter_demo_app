@@ -1,19 +1,20 @@
 import 'dart:io';
-import 'package:cgv_demo_flutter_firebase/pages/checkout_page.dart';
-import 'package:cgv_demo_flutter_firebase/pages/product_page.dart';
+import 'package:af_flutter_sample/pages/checkout_page.dart';
+import 'package:af_flutter_sample/pages/product_page.dart';
 import 'package:flutter/material.dart';
 import 'package:clevertap_plugin/clevertap_plugin.dart';
+import 'package:appsflyer_sdk/appsflyer_sdk.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import 'package:cgv_demo_flutter_firebase/services/push_service.dart';
+import 'package:af_flutter_sample/services/push_service.dart';
 import 'pages/login_page.dart';
 import 'pages/cart_page.dart';
 import 'pages/test_page.dart';
-
+import 'package:af_flutter_sample/services/appsflyer_service.dart';
 
 @pragma('vm:entry-point')
-void _onKilledStateNotificationClickedHandler(Map<String, dynamic> payload) async {
+void _onKilledStateNotificationClickedHandler(
+    Map<String, dynamic> payload) async {
   debugPrint('[KilledState] Payload: $payload');
 }
 
@@ -22,9 +23,16 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  CleverTapPlugin.onKilledStateNotificationClicked(_onKilledStateNotificationClickedHandler);
+  CleverTapPlugin.onKilledStateNotificationClicked(
+      _onKilledStateNotificationClickedHandler);
 
   await PushService().init();
+
+  await AppsFlyerService().init(
+    onDeepLinkReceived: (deepLink) {
+      debugPrint("DeepLink: $deepLink");
+    },
+  );
   runApp(const MyApp());
 }
 
@@ -42,25 +50,30 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+
+    // _initServices();
+
     if (Platform.isAndroid) {
-
       _checkLaunchFromNotification();
-      platform.setMethodCallHandler(_handleRuntimeDeeplink); 
+      platform.setMethodCallHandler(_handleRuntimeDeeplink);
     }
-    _ct.setCleverTapInAppNotificationButtonClickedHandler(inAppNotificationButtonClicked);
-    _ct.setCleverTapInAppNotificationDismissedHandler(inAppNotificationDismissed);
+    _ct.setCleverTapInAppNotificationButtonClickedHandler(
+        inAppNotificationButtonClicked);
+    _ct.setCleverTapInAppNotificationDismissedHandler(
+        inAppNotificationDismissed);
     _ct.setCleverTapInAppNotificationShowHandler(inAppNotificationShow);
-
   }
 
-    /* -------------------- In_app message -------------------- */
-
-  // void inAppNotificationButtonClicked(Map<String, dynamic> map) {
-  //   this.setState(() {
-  //     print("inAppNotificationButtonClicked called = ${map.toString()}");
-  //   });
+  // Future<void> _initServices() async {
+  //   await AppsFlyerService().init(
+  //     onDeepLinkReceived: (deepLink) {
+  //       _handleDeepLinkString(deepLink);
+  //     },
+  //   );
   // }
 
+  // -------- CleverTap Config  --------
+  /* -------------------- In_app message -------------------- */
   void inAppNotificationButtonClicked(Map<String, dynamic>? map) {
     debugPrint("🔘 In-App Notification Button Clicked: $map");
 
@@ -80,22 +93,22 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-    void inAppNotificationDismissed(Map<String, dynamic> map) {
-      debugPrint("🔕 In-App Notification Dismissed");
-    }
+  void inAppNotificationDismissed(Map<String, dynamic> map) {
+    debugPrint("🔕 In-App Notification Dismissed");
+  }
 
-    void inAppNotificationShow(Map<String, dynamic> map) {
-      debugPrint("🟡 In-App Notification Shown: $map");
-    }
+  void inAppNotificationShow(Map<String, dynamic> map) {
+    debugPrint("🟡 In-App Notification Shown: $map");
+  }
 
-    /* -------------------- Cold-start push -------------------- */
-    Future<void> _checkLaunchFromNotification() async {
-      final launchInfo = await CleverTapPlugin.getAppLaunchNotification();
-      if (launchInfo.didNotificationLaunchApp) {
-        final payload = launchInfo.payload!;
-        _handleDeepLink(payload);
-      }
+  /* -------------------- Cold-start push -------------------- */
+  Future<void> _checkLaunchFromNotification() async {
+    final launchInfo = await CleverTapPlugin.getAppLaunchNotification();
+    if (launchInfo.didNotificationLaunchApp) {
+      final payload = launchInfo.payload!;
+      _handleDeepLink(payload);
     }
+  }
 
   void _handleDeepLink(Map<String, dynamic> payload) {
     final deepLink = payload['wzrk_dl'] as String?;
@@ -150,8 +163,8 @@ class _MyAppState extends State<MyApp> {
 
   void _pushIfPossible(Widget page) {
     final ctx = navigatorKey.currentContext;
-      debugPrint('[NavigatorContext] $ctx');
-      debugPrint('[NavigatorState] ${navigatorKey.currentState}');
+    debugPrint('[NavigatorContext] $ctx');
+    debugPrint('[NavigatorState] ${navigatorKey.currentState}');
 
     if (ctx != null) {
       Navigator.push(ctx, MaterialPageRoute(builder: (_) => page));

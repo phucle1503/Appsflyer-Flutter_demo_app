@@ -1,4 +1,4 @@
-package aka.digital.cgv_demo_v2;
+package com.af_flutter_sample;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -21,9 +21,14 @@ import com.clevertap.android.geofence.CTGeofenceAPI;
 import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener;
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.clevertap.android.geofence.CTGeofenceSettings;
+import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList; // [Native Display]
+
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
@@ -31,8 +36,9 @@ import io.flutter.plugin.common.MethodChannel;
 
 import org.json.JSONObject;
 
-public class MainActivity extends FlutterActivity {
+public class MainActivity extends FlutterActivity implements DisplayUnitListener {
     private static final String CHANNEL = "deeplink_channel";
+    private static final String NATIVE_DISPLAY_CHANNEL = "native_display_channel"; // [Native Display]
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
@@ -87,7 +93,30 @@ public class MainActivity extends FlutterActivity {
             } catch (IllegalStateException e) {
                 Log.e("[Geofence]", "Geofence SDK chưa được init đúng cách ❌", e);
             }
+
+            cleverTapAPI.setDisplayUnitListener(this); // Lắng nghe native display
+            HashMap<String, Object> eventProps = new HashMap<>();
+            eventProps.put("source", "flutter");
+            cleverTapAPI.pushEvent("native display", eventProps);
+            cleverTapAPI.getAllDisplayUnits();            // Kích hoạt lấy dữ liệu native display
         }
+
+        // ===== GAID DEBUG =====
+        new Thread(() -> {
+            try {
+                AdvertisingIdClient.Info adInfo =
+                        AdvertisingIdClient.getAdvertisingIdInfo(getApplicationContext());
+
+                String gaid = adInfo.getId();
+                boolean isLimitAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
+
+                Log.d("GAID_DEBUG", "Advertising ID: " + gaid);
+                Log.d("GAID_DEBUG", "Limit Ad Tracking: " + isLimitAdTrackingEnabled);
+
+            } catch (Exception e) {
+                Log.e("GAID_DEBUG", "Error getting GAID: " + e.getMessage());
+            }
+        }).start();
     }
 
 
@@ -107,6 +136,29 @@ public class MainActivity extends FlutterActivity {
             }
         }
         setIntent(intent);
+    }
+
+    @Override
+    public void onDisplayUnitsLoaded(ArrayList<CleverTapDisplayUnit> displayUnits) {
+        if (displayUnits != null && !displayUnits.isEmpty()) {
+            CleverTapDisplayUnit adUnit = displayUnits.get(0);
+
+            String title = adUnit.getContents().get(0).getTitle();
+            String message = adUnit.getContents().get(0).getMessage();
+
+            new android.app.AlertDialog.Builder(this)
+                    .setTitle(title)
+                    .setMessage(message)
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        CleverTapAPI.getDefaultInstance(this).pushDisplayUnitClickedEventForID(adUnit.getUnitID());
+                    })
+                    .show();
+
+            CleverTapAPI.getDefaultInstance(this).pushDisplayUnitViewedEventForID(adUnit.getUnitID());
+            CleverTapAPI.getDefaultInstance(getApplicationContext()).pushDisplayUnitClickedEventForID(adUnit.getUnitID());
+
+
+        }
     }
 
     private void createCustomNotificationChannel() {
