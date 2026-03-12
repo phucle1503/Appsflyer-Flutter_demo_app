@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # cgv_demo_flutter_firebase
 
 A new Flutter project.
@@ -34,3 +35,7 @@ android:
     Error: Your project clevertap-android-c74c1 must be on the Blaze (pay-as-you-go) plan to complete this command. Required API artifactregistry.googleapis.com can't be enabled until the upgrade is complete. To upgrade, visit the following URL:  https://console.firebase.google.com/project/clevertap-android-c74c1/usage/details
 
     Đã xong native display ở tầng android -> render UI ở test_page.dart
+=======
+# Appsflyer-Flutter_demo_app
+AF - Flutter Demo App
+>>>>>>> 118479da8256e8a2ff897000dc78c270d2bbef8d
