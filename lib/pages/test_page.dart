@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:clevertap_plugin/clevertap_plugin.dart';
+// import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:appsflyer_sdk/appsflyer_sdk.dart';
@@ -14,7 +14,7 @@ class TestPage extends StatefulWidget {
 
 class _TestPageState extends State<TestPage> {
   final TextEditingController _eventNameController = TextEditingController();
-  final CleverTapPlugin _cleverTapPlugin = CleverTapPlugin();
+  // final CleverTapPlugin _cleverTapPlugin = CleverTapPlugin();
   final _appsflyerSdk = AppsFlyerService().sdk;
 
   bool inboxInitialized = false;
@@ -31,8 +31,8 @@ class _TestPageState extends State<TestPage> {
   void initState() {
     super.initState();
     _loadGdprSettings();
-    _initializeInboxHandlers();
-    CleverTapPlugin.initializeInbox();
+    // _initializeInboxHandlers();
+    // CleverTapPlugin.initializeInbox();
     _recentActions.add('${_formatTime(DateTime.now())}: CleverTap initialized');
   }
 
@@ -43,30 +43,30 @@ class _TestPageState extends State<TestPage> {
       _reportNetworkInfo = prefs.getBool('network_info') ?? true;
       _isOffline = prefs.getBool('offline') ?? false;
     });
-    CleverTapPlugin.setOptOut(_isOptedOut);
-    CleverTapPlugin.enableDeviceNetworkInfoReporting(_reportNetworkInfo);
-    CleverTapPlugin.setOffline(_isOffline);
+    // CleverTapPlugin.setOptOut(_isOptedOut);
+    // CleverTapPlugin.enableDeviceNetworkInfoReporting(_reportNetworkInfo);
+    // CleverTapPlugin.setOffline(_isOffline);
   }
 
   Future<void> _updateOptOut(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('opt_out', value);
     setState(() => _isOptedOut = value);
-    CleverTapPlugin.setOptOut(value);
+    // CleverTapPlugin.setOptOut(value);
   }
 
   Future<void> _updateNetworkInfo(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('network_info', value);
     setState(() => _reportNetworkInfo = value);
-    CleverTapPlugin.enableDeviceNetworkInfoReporting(value);
+    // CleverTapPlugin.enableDeviceNetworkInfoReporting(value);
   }
 
   Future<void> _updateOffline(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('offline', value);
     setState(() => _isOffline = value);
-    CleverTapPlugin.setOffline(value);
+    // CleverTapPlugin.setOffline(value);
   }
 
   static Map<String, dynamic> _createProperty() {
@@ -375,12 +375,12 @@ class _TestPageState extends State<TestPage> {
           distanceFilter: 100,
         ),
       );
-      CleverTapPlugin.setLocation(p.latitude, p.longitude);
+      // CleverTapPlugin.setLocation(p.latitude, p.longitude);
 
-      CleverTapPlugin.recordEvent("Location Synced", {
-        "lat": p.latitude,
-        "lng": p.longitude,
-      });
+      // CleverTapPlugin.recordEvent("Location Synced", {
+      //   "lat": p.latitude,
+      //   "lng": p.longitude,
+      // });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -415,14 +415,14 @@ class _TestPageState extends State<TestPage> {
           'https://media.licdn.com/dms/image/v2/C560BAQF34hDVYAkTPA/company-logo_200_200/company-logo_200_200/0/1661180193743?e=2147483647&v=beta&t=JB3TxPIt2t6byGsInkGfnAr736S3z8J4gyrZbRSM_Kc'
     };
 
-    CleverTapPlugin.promptPushPrimer(pushPrimerJSON);
+    // CleverTapPlugin.promptPushPrimer(pushPrimerJSON);
   }
 
-  void _initializeInboxHandlers() {
-    _cleverTapPlugin.setCleverTapInboxDidInitializeHandler(inboxDidInitialize);
-    _cleverTapPlugin
-        .setCleverTapInboxMessagesDidUpdateHandler(inboxMessagesDidUpdate);
-  }
+  // void _initializeInboxHandlers() {
+  //   _cleverTapPlugin.setCleverTapInboxDidInitializeHandler(inboxDidInitialize);
+  //   _cleverTapPlugin
+  //       .setCleverTapInboxMessagesDidUpdateHandler(inboxMessagesDidUpdate);
+  // }
 
   void inboxDidInitialize() {
     setState(() {
@@ -454,12 +454,12 @@ class _TestPageState extends State<TestPage> {
       'navBarColor': '#1976D2',
       'tabs': ['Promotions', 'Offers', 'Others']
     };
-    CleverTapPlugin.showInbox(styleConfig);
+    // CleverTapPlugin.showInbox(styleConfig);
   }
 
   Future<void> _checkAndRequestPushPermission() async {
-    bool? isGranted =
-        await CleverTapPlugin.getPushNotificationPermissionStatus();
+    bool? isGranted = null;
+        // await CleverTapPlugin.getPushNotificationPermissionStatus();
     if (isGranted == null) {
       debugPrint("⚠️ Không lấy được trạng thái quyền push.");
       return;
@@ -468,7 +468,7 @@ class _TestPageState extends State<TestPage> {
     if (!isGranted) {
       const fallbackToSettings =
           false; // true: chuyển tới Settings nếu bị từ chối
-      CleverTapPlugin.promptForPushNotification(fallbackToSettings);
+      // CleverTapPlugin.promptForPushNotification(fallbackToSettings);
       debugPrint("📩 Hiển thị dialog xin quyền push...");
     } else {
       debugPrint("✅ Push permission đã được cấp.");

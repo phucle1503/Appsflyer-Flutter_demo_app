@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     <application
-        android:label="AF Flutter Sample App"
+        android:label="aka_appsflyer_flutter_v1"
         android:name=".MyApplication"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -37,10 +37,15 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="abc" />
+                <data android:scheme="app_custom_scheme" />
+                <data android:scheme="https"
+                    android:host="af-flutter.onelink.me" 
+                    android:pathPrefix="/test_page" />
             </intent-filter>
         </activity>
-
+        <meta-data 
+            android:name="flutter_deeplinking_enabled" 
+            android:value="false" />
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
@@ -79,6 +84,12 @@
             android:exported="false"
             android:enabled="true">
         </receiver>
+        <receiver 
+            android:name="com.appsflyer.SingleInstallBroadcastReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.vending.INSTALL_REFERRER" />
+            </intent-filter>
+	    </receiver>
         <receiver
             android:name="com.clevertap.pushtemplates.PushTemplateReceiver"
             android:exported="false"

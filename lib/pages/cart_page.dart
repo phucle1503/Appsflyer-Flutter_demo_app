@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:af_flutter_sample/model/cart.dart';
 import 'checkout_page.dart';
-import 'package:clevertap_plugin/clevertap_plugin.dart';
+// import 'package:clevertap_plugin/clevertap_plugin.dart';
 
 class Cartpage extends StatelessWidget {
   const Cartpage({super.key});
@@ -23,7 +23,7 @@ class Cartpage extends StatelessWidget {
             })
         .toList();
 
-    CleverTapPlugin.recordChargedEvent(chargeDetails, itemData);
+    // CleverTapPlugin.recordChargedEvent(chargeDetails, itemData);
 
     for (final item in Cart.items) {
       item.product.stock =

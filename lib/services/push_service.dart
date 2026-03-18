@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:af_flutter_sample/pages/product_page.dart';
-import 'package:clevertap_plugin/clevertap_plugin.dart';
+// import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -18,7 +18,7 @@ class PushService {
   static final PushService _instance = PushService._internal();
   factory PushService() => _instance;
 
-  final CleverTapPlugin _ct = CleverTapPlugin();
+  // final CleverTapPlugin _ct = CleverTapPlugin();
 
   Future<void> init() async {
     await Firebase.initializeApp();
@@ -26,18 +26,18 @@ class PushService {
 
     final token = await FirebaseMessaging.instance.getToken();
     if (token != null) {
-      CleverTapPlugin.setPushToken(token);
+      // CleverTapPlugin.setPushToken(token);
       debugPrint('[FCM token] $token');
     }
 
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-      CleverTapPlugin.setPushToken(newToken);
+      // CleverTapPlugin.setPushToken(newToken);
       debugPrint('[FCM token refresh] $newToken');
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage m) {
       debugPrint('[FCM onMessage] ${m.data}');
-      CleverTapPlugin.createNotification(jsonEncode(m.data));
+      // CleverTapPlugin.createNotification(jsonEncode(m.data));
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage m) {
@@ -45,11 +45,11 @@ class PushService {
       _handleNotificationClick(m.data);
     });
 
-    _ct.setCleverTapPushClickedPayloadReceivedHandler(
-        pushClickedPayloadReceived);
+    // _ct.setCleverTapPushClickedPayloadReceivedHandler(
+    //     pushClickedPayloadReceived);
     FirebaseMessaging.onBackgroundMessage(_onBackground);
 
-    _configureCleverTapChannel();
+    // _configureCleverTapChannel();
   }
 
   /* ---------------- HANDLER PUSH CLICK (từ CT callback) ------------- */
@@ -112,13 +112,13 @@ class PushService {
   }
 
   /* ----------------- NOTIFICATION CHANNEL --------------------------- */
-  void _configureCleverTapChannel() {
-    if (Platform.isAndroid) {
-      CleverTapPlugin.createNotificationChannelWithSound('Flutter Test',
-          'Flutter Test', 'Flutter Test', 3, true, 'sound1.mp3');
-      CleverTapPlugin.createNotificationChannelWithSound('Custom_Channel',
-          'Custom_Channel', 'Custom_Channel', 3, true, 'lmao.mp3');
-    }
-    CleverTapPlugin.setDebugLevel(4);
-  }
+  // void _configureCleverTapChannel() {
+  //   if (Platform.isAndroid) {
+  //     CleverTapPlugin.createNotificationChannelWithSound('Flutter Test',
+  //         'Flutter Test', 'Flutter Test', 3, true, 'sound1.mp3');
+  //     CleverTapPlugin.createNotificationChannelWithSound('Custom_Channel',
+  //         'Custom_Channel', 'Custom_Channel', 3, true, 'lmao.mp3');
+  //   }
+  //   CleverTapPlugin.setDebugLevel(4);
+  // }
 }

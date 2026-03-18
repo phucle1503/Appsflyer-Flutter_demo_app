@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:clevertap_plugin/clevertap_plugin.dart';
+// import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'product_page.dart';
@@ -26,12 +26,12 @@ class _LoginPageState extends State<Loginpage> {
   String _logMessage = '';
   bool inboxInitialized = false;  
   bool isLoggedIn = false;
-  final CleverTapPlugin _cleverTapPlugin = CleverTapPlugin();
+  // final CleverTapPlugin _cleverTapPlugin = CleverTapPlugin();
 
   @override
   void initState() {
     super.initState();
-    _initializeInboxHandlers(); 
+    // _initializeInboxHandlers(); 
     _checkLoginAndInitInbox();  
   }
 
@@ -61,13 +61,13 @@ class _LoginPageState extends State<Loginpage> {
         'stuff': ['bags', 'shoes'],
       };
 
-      await CleverTapPlugin.onUserLogin(profile);
-      await CleverTapPlugin.recordEvent('Login', {'method': 'email_password'});
+      // await CleverTapPlugin.onUserLogin(profile);
+      // await CleverTapPlugin.recordEvent('Login', {'method': 'email_password'});
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('is_logged_in', true); 
 
-      CleverTapPlugin.initializeInbox();
+      // CleverTapPlugin.initializeInbox();
   
       setState(() {
         _logMessage =
@@ -91,26 +91,26 @@ class _LoginPageState extends State<Loginpage> {
         'stuff': ['bags', 'shoes'],
       };
 
-      await CleverTapPlugin.profileSet(profile);
+      // await CleverTapPlugin.profileSet(profile);
 
       setState(() {
         _logMessage = '[Update] Đã cập nhật profile cho ID $identity ';
-        _fetchCleverTapId();
+        // _fetchCleverTapId();
       });
     }
   }
 
-  Future<void> _fetchCleverTapId() async {
-  try {
-    final CT_id = await CleverTapPlugin.getCleverTapID();
-    debugPrint('CleverTap ID: $CT_id');
-    setState(() {
-      _logMessage = '[CleverTap ID] Đã log CT_id: $CT_id';
-    });
-  } catch (e) {
-    debugPrint('Lấy CleverTap ID lỗi: $e');
-    }
-  }
+  // Future<void> _fetchCleverTapId() async {
+  // try {
+  //   final CT_id = await CleverTapPlugin.getCleverTapID();
+  //   debugPrint('CleverTap ID: $CT_id');
+  //   setState(() {
+  //     _logMessage = '[CleverTap ID] Đã log CT_id: $CT_id';
+  //   });
+  // } catch (e) {
+  //   debugPrint('Lấy CleverTap ID lỗi: $e');
+  //   }
+  // }
 
   Future<void> _syncLocationToCleverTap() async {
     LocationPermission perm = await Geolocator.checkPermission();
@@ -137,7 +137,7 @@ class _LoginPageState extends State<Loginpage> {
           distanceFilter: 100,
         ),
       );
-      CleverTapPlugin.setLocation(p.latitude, p.longitude);
+      // CleverTapPlugin.setLocation(p.latitude, p.longitude);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("🧭 Đã gửi vị trí: (${p.latitude}, ${p.longitude})")),
@@ -178,19 +178,19 @@ class _LoginPageState extends State<Loginpage> {
       'imageUrl': 'https://media.licdn.com/dms/image/v2/C560BAQF34hDVYAkTPA/company-logo_200_200/company-logo_200_200/0/1661180193743?e=2147483647&v=beta&t=JB3TxPIt2t6byGsInkGfnAr736S3z8J4gyrZbRSM_Kc'
     };
 
-    CleverTapPlugin.promptPushPrimer(pushPrimerJSON);
+    // CleverTapPlugin.promptPushPrimer(pushPrimerJSON);
   }
 
-  void _initializeInboxHandlers() {
-    _cleverTapPlugin.setCleverTapInboxDidInitializeHandler(inboxDidInitialize);
-    _cleverTapPlugin.setCleverTapInboxMessagesDidUpdateHandler(inboxMessagesDidUpdate);
-  }
+  // void _initializeInboxHandlers() {
+  //   _cleverTapPlugin.setCleverTapInboxDidInitializeHandler(inboxDidInitialize);
+  //   _cleverTapPlugin.setCleverTapInboxMessagesDidUpdateHandler(inboxMessagesDidUpdate);
+  // }
 
   void _checkLoginAndInitInbox() async {
     final prefs = await SharedPreferences.getInstance();
     bool? loggedIn = prefs.getBool('is_logged_in');
     if (loggedIn == true) {
-      CleverTapPlugin.initializeInbox();
+      // CleverTapPlugin.initializeInbox();
     }
   }
 
@@ -223,7 +223,7 @@ class _LoginPageState extends State<Loginpage> {
       'navBarColor': '#1976D2',
       'tabs': ['Promotions', 'Offers', 'Others']
     };
-    CleverTapPlugin.showInbox(styleConfig);
+    // CleverTapPlugin.showInbox(styleConfig);
   }
 
   @override

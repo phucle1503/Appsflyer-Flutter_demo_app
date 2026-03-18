@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:clevertap_plugin/clevertap_plugin.dart';
+// import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:af_flutter_sample/model/product.dart';
 import 'package:af_flutter_sample/model/cart.dart';
 import 'cart_page.dart';
@@ -47,7 +47,7 @@ class Productpage extends StatelessWidget {
       'Category': product.category,
       'Quantity': 1,
     };
-    CleverTapPlugin.recordEvent("Add to Cart", eventData);
+    // CleverTapPlugin.recordEvent("Add to Cart", eventData);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${product.name} đã được thêm vào giỏ hàng.')),
