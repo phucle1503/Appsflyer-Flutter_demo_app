@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:397393479336:android:881e475d9b78814887649d",
+        "android_client_info": {
+          "package_name": "akademo.aka_appsflyer_flutter_v1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwkguC7jcI4aGaxS7uhvNNZvNEK9oJFYc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:397393479336:android:7934c2405945747787649d",
         "android_client_info": {
           "package_name": "com.af_flutter_sample"

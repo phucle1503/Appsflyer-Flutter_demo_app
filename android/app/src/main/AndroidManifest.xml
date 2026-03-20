@@ -33,18 +33,25 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="http" android:host="af-flutter.onelink.me" />
+                <data android:scheme="https" android:host="af-flutter.onelink.me" />
+            </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="app_custom_scheme" />
-                <data android:scheme="https"
-                    android:host="af-flutter.onelink.me" 
-                    android:pathPrefix="/test_page" />
+
+                <data android:scheme="abc" />
             </intent-filter>
         </activity>
-        <meta-data 
-            android:name="flutter_deeplinking_enabled" 
+        <meta-data
+            android:name="flutter_deeplinking_enabled"
             android:value="false" />
         <meta-data
             android:name="flutterEmbedding"
@@ -84,12 +91,12 @@
             android:exported="false"
             android:enabled="true">
         </receiver>
-        <receiver 
+        <receiver
             android:name="com.appsflyer.SingleInstallBroadcastReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
-	    </receiver>
+        </receiver>
         <receiver
             android:name="com.clevertap.pushtemplates.PushTemplateReceiver"
             android:exported="false"

@@ -1,6 +1,6 @@
 import 'package:appsflyer_sdk/appsflyer_sdk.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:convert'; 
+import 'dart:convert';
 
 class AppsFlyerService {
   static final AppsFlyerService _instance = AppsFlyerService._internal();
@@ -9,18 +9,23 @@ class AppsFlyerService {
 
   late AppsflyerSdk _appsflyerSdk;
   bool _isInitialized = false;
+  bool _hasNavigated = false;
 
   AppsFlyerService._internal();
 
   AppsflyerSdk get sdk {
     if (!_isInitialized) {
-      throw Exception("AppsFlyerService not initialized. Call init() first.");
+      debugPrint(
+          "🔗 [AppsFlyer Log] ⚠️Cảnh báo: Truy cập SDK khi chưa init xong. Đang trả về instance tạm thời.");
+      // throw Exception(
+      //     "🔗 [AppsFlyer Log] AppsFlyerService not initialized. Call init() first.");
     }
     return _appsflyerSdk;
   }
 
   Future<void> init({
-    required Function(String? deepLinkValue, Map<String, dynamic>? fullData) onDeepLinkReceived,
+    required Function(String? deepLinkValue, Map<String, dynamic>? fullData)
+        onDeepLinkReceived,
   }) async {
     if (_isInitialized) return;
 
@@ -28,75 +33,139 @@ class AppsFlyerService {
       afDevKey: "cYmtVpJCBSET23rRv4GWXa",
       appId: "013022026",
       showDebug: true,
-      timeToWaitForATTUserAuthorization: 15,
+      timeToWaitForATTUserAuthorization: 5,
       manualStart: true,
     );
 
     _appsflyerSdk = AppsflyerSdk(options);
 
     // 1. -------- Deferred Deep Linking (Conversion Data) --------
-    // Dành cho trường hợp người dùng mới cài app lần đầu từ link quảng cáo
-    // _appsflyerSdk?.onInstallConversionData((res) {
-    //   debugPrint("📦 Conversion Data (Deferred): ${jsonEncode(res)}");
-      
-    //   // Nếu là lần đầu cài đặt (is_first_launch = true), 
-    //   // bạn có thể lấy deep_link_value từ đây nếu Unified Deep Linking không bắt được
-    //   if (res['payload']['is_first_launch'] == true) {
-    //     final linkValue = res['payload']['deep_link_value'];
-    //     if (linkValue != null) {
-    //        onDeepLinkReceived(linkValue, res['payload']);
-    //     }
-    //   }
-    // });
+    _appsflyerSdk?.onInstallConversionData((res) {
+      debugPrint(
+        "🔗 [AppsFlyer Log] 1. Conversion Data (Full): ${jsonEncode(res)}",
+      );
+
+      final Map<String, dynamic> data = res['payload'] ?? res;
+      final String? linkValue = data['deep_link_value']?.toString();
+
+      if ((data['is_first_launch'] == true ||
+              data['is_first_launch'] == "true") &&
+          !_hasNavigated) {
+        debugPrint("🔗 [AppsFlyer Log] 1. Conversion Data : is_first_launch");
+
+        if (linkValue != null && linkValue.isNotEmpty) {
+          _hasNavigated = true;
+          debugPrint(
+            "🔗 [AppsFlyer Log] 1. Conversion Data Deep Link Value: $linkValue",
+          );
+
+          onDeepLinkReceived(linkValue, data);
+          debugPrint(
+            "🔗 [AppsFlyer Log] 1. Conversion Data : called onDeeplinkReceived()",
+          );
+        } else {
+          debugPrint(
+            "🔗 [AppsFlyer Log] 1. Conversion Data Deep Link Value: null",
+          );
+        }
+      }
+    });
 
     // 2. -------- Direct Deep Linking (Legacy) --------
-    // Xử lý các link cũ hoặc khi không dùng Unified Deep Linking
-    // _appsflyerSdk?.onAppOpenAttribution((res) {
-    //   debugPrint("🔗 Direct Deep Link (Legacy): ${jsonEncode(res)}");
-    //   final linkValue = res['payload']['link']; // Thường nằm trong key 'link' hoặc 'base_url'
-    //   onDeepLinkReceived(linkValue, res['payload']);
-    // });
+    _appsflyerSdk?.onAppOpenAttribution((res) {
+      debugPrint("🔗 [AppsFlyer Log] 2. DDL (Full): ${jsonEncode(res)}");
+
+      if (_hasNavigated) return; // Bỏ qua nếu đã điều hướng
+
+      final Map<String, dynamic> data = res['payload'] ?? res;
+      final String? linkValue = data['deep_link_value']?.toString() ??
+          data['deep_link_value']?.toString();
+
+      debugPrint("🔗 [AppsFlyer Log] 2. DDL Deep Link Value: $linkValue");
+
+      if (linkValue != null) {
+        onDeepLinkReceived(linkValue, data);
+        debugPrint("🔗 [AppsFlyer Log] 2. DDL: called onDeeplinkReceived()");
+      }
+    });
 
     // 3. -------- Unified Deep Linking (Khuyên dùng) --------
-    // Gộp cả 2 trường hợp trên, hỗ trợ OneLink tốt nhất
     _appsflyerSdk?.onDeepLinking((DeepLinkResult dp) {
-      switch (dp.status) {
-        case Status.FOUND:
-          final deepLinkValue = dp.deepLink?.deepLinkValue;
-          final mediaSource = dp.deepLink?.mediaSource;
-          debugPrint("🔗 [AppsFlyer Deeplink] Deep link Value: $deepLinkValue");
-          debugPrint("🔗 [AppsFlyer Deeplink] Meida Source: $mediaSource");
+      debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: ${dp.status}");
 
-          // Trả về cả giá trị rút gọn và toàn bộ object để bạn xử lý logic phức tạp (nếu cần)
-          onDeepLinkReceived(deepLinkValue, dp.deepLink?.clickEvent);
-          break;
-        case Status.NOT_FOUND:
-          debugPrint("🔗 [AppsFlyer Deeplink] UDL Deep link not found.");
-          break;
-        case Status.ERROR:
-          debugPrint("🔗 [AppsFlyer Deeplink] UDL Error: ${dp.error}");
-          break;
-        case Status.PARSE_ERROR:
-          debugPrint("🔗 [AppsFlyer Deeplink] UDL Parse Error");
-          break;
+      if (dp.status == Status.FOUND && !_hasNavigated) {
+        final String? deepLinkValue = dp.deepLink?.deepLinkValue;
+        final Map<String, dynamic>? data = dp.deepLink?.clickEvent;
+
+        if (deepLinkValue != null) {
+          _hasNavigated = true;
+          debugPrint(
+              "🔗 [AppsFlyer Log] 3. UDL Deep Link Value: $deepLinkValue");
+          onDeepLinkReceived(deepLinkValue, data);
+          debugPrint("🔗 [AppsFlyer Log] 3. UDL: called onDeeplinkReceived()");
+        }
+      } else if (dp.status == Status.ERROR) {
+        debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Error -> ${dp.error}");
+      } else if (dp.status == Status.NOT_FOUND) {
+        debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Deep link not found");
+      } else if (dp.status == Status.PARSE_ERROR) {
+        debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Parse Error");
+      } else {
+        debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Deep link not found");
       }
+
+      // switch (dp.status) {
+      //   case Status.FOUND:
+      //     final String? deepLinkValue = dp.deepLink?.deepLinkValue;
+      //     final Map<String, dynamic>? data = dp.deepLink?.clickEvent;
+
+      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL (Full): ${dp.toString()}");
+      //     debugPrint(
+      //       "🔗 [AppsFlyer Log] 3. UDL Click Event: ${jsonEncode(data)}",
+      //     );
+      //     debugPrint(
+      //       "🔗 [AppsFlyer Log] 3. UDL Deep Link Value: $deepLinkValue",
+      //     );
+
+      //     onDeepLinkReceived(deepLinkValue, data);
+      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL: called onDeeplinkReceived()");
+      //     break;
+      //   case Status.NOT_FOUND:
+      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Deep link not found.");
+      //     break;
+      //   case Status.ERROR:
+      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Error -> ${dp.error}");
+      //     break;
+      //   case Status.PARSE_ERROR:
+      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Parse Error");
+      //     break;
+      // }
     });
 
     await _appsflyerSdk.initSdk(
       registerConversionDataCallback: true,
-      registerOnAppOpenAttributionCallback: false,
+      registerOnAppOpenAttributionCallback: true,
       registerOnDeepLinkingCallback: true,
     );
 
     _appsflyerSdk.startSDK(
       onSuccess: () {
-        debugPrint("✅ AppsFlyer SDK initialized successfully.");
+        debugPrint(
+            "🔗 [AppsFlyer Log] ✅ AppsFlyer SDK initialized successfully.");
+        _isInitialized = true;
+        ;
       },
       onError: (int errorCode, String errorMessage) {
-        debugPrint("❌ AppsFlyer SDK init error: $errorCode - $errorMessage");
+        debugPrint(
+          "🔗 [AppsFlyer Log] ❌ AppsFlyer SDK init error: $errorCode - $errorMessage",
+        );
       },
     );
-    _isInitialized = true;
+    // _isInitialized = true;
+  }
 
+  void resetNavigationFlag() {
+    _hasNavigated = false;
+    debugPrint("🔗 [AppsFlyer Log] Navigation flag reset.");
   }
 }

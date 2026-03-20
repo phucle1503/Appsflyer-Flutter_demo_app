@@ -35,7 +35,7 @@ android {
     kotlinOptions { jvmTarget = "11" }
 
     defaultConfig {
-        applicationId = "akademo.aka-appsflyer-flutter-v1"
+        applicationId = "akademo.aka_appsflyer_flutter_v1"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -62,10 +62,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.3.1"))
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-analytics")
-
-#    implementation("com.clevertap.android:clevertap-android-sdk:7.4.0")
-#   implementation("com.clevertap.android:push-templates:2.0.0")
-#   implementation("com.clevertap.android:clevertap-geofence-sdk:1.4.0")
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
