@@ -459,7 +459,7 @@ class _TestPageState extends State<TestPage> {
 
   Future<void> _checkAndRequestPushPermission() async {
     bool? isGranted = null;
-        // await CleverTapPlugin.getPushNotificationPermissionStatus();
+    // await CleverTapPlugin.getPushNotificationPermissionStatus();
     if (isGranted == null) {
       debugPrint("⚠️ Không lấy được trạng thái quyền push.");
       return;

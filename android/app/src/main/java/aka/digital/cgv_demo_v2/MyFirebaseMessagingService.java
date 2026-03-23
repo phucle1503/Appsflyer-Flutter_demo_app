@@ -22,12 +22,9 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
-// import com.clevertap.android.sdk.CleverTapAPI;
-// import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
-// import com.clevertap.android.sdk.pushnotification.fcm.CTFcmMessageHandler;
-
+import com.appsflyer.AppsFlyerLib;
 import java.util.Map;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
@@ -37,42 +34,25 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(@NonNull String token) {
-        Log.d(TAG, "FCM Token: " + token);
-        // CleverTapAPI ct = CleverTapAPI.getDefaultInstance(getApplicationContext());
-        // if (ct != null) ct.pushFcmRegistrationId(token, true);
+        super.onNewToken(token);
+        Log.d(TAG, " [MyFirebaseMessagingService] onNewToken: " + token);
+        AppsFlyerLib.getInstance().updateServerUninstallToken(getApplicationContext(), token);
     }
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        Map<String, String> data = remoteMessage.getData();
-        Log.d(TAG, "Push data payload: " + data);
 
-        // if (handleCleverTapPush(remoteMessage)) {
-        //     Log.i(TAG, "[PUSH] Đây là push từ CleverTap – đã xử lý bằng SDK");
-        //     return; 
-        // }
-        // Log.i(TAG, "[PUSH] Không phải từ CleverTap – sẽ hiển thị theo custom");
+        if (remoteMessage.getData().containsKey("af-uinstall-tracking")) {
+            Log.d(TAG, "[MyFirebaseMessagingService] AppsFlyer uninstall tracking silent push received.");
+            return; 
+        }
+
+        Map<String, String> data = remoteMessage.getData();
+        Log.d(TAG, "[MyFirebaseMessagingService] Push data payload: " + data);
+
         showCustomNotification(remoteMessage);
     }
-
-    // private boolean handleCleverTapPush(RemoteMessage remoteMessage) {
-    //     Map<String, String> data = remoteMessage.getData();
-    //     if (data == null || data.isEmpty()) return false;
-
-    //     Bundle extras = new Bundle();
-    //         for (Map.Entry<String, String> entry : data.entrySet()) {
-    //             extras.putString(entry.getKey(), entry.getValue());
-    //         }
-
-    //     NotificationInfo info = CleverTapAPI.getNotificationInfo(extras);
-    //     Log.d(TAG, "NotificationInfo: fromCleverTap = " + info.fromCleverTap);
-
-    //     if (!info.fromCleverTap) return false;
-
-    //     new CTFcmMessageHandler().createNotification(getApplicationContext(), remoteMessage);
-    //     return true;
-    // }
 
     private void showCustomNotification(RemoteMessage message) {
         createChannelIfNeeded();
