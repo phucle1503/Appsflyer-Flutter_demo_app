@@ -22,6 +22,17 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>aka-appsflyer-flutter-v1</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>CleverTapAccountID</key>
@@ -53,5 +64,15 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+    <string>Ứng dụng cần truy cập vị trí của bạn để cung cấp dịch vụ chính xác hơn.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Ứng dụng cần truy cập vị trí của bạn ngay cả khi chạy nền.</string>
+
+    <key>NSUserTrackingUsageDescription</key>
+    <string>Ứng dụng cần quyền này để đo lường hiệu quả chiến dịch quảng cáo và cải thiện trải nghiệm của bạn.</string>
+
+    <key>PermissionGroupNotification</key>
+    <string>Ứng dụng muốn gửi thông báo cho bạn về các cập nhật mới nhất.</string>
 </dict>
 </plist>

@@ -1,4 +1,6 @@
 PODS:
+  - app_tracking_transparency (0.0.1):
+    - Flutter
   - appsflyer_sdk (6.17.8):
     - appsflyer_sdk/Core (= 6.17.8)
   - appsflyer_sdk/Core (6.17.8):
@@ -141,6 +143,7 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
+  - app_tracking_transparency (from `.symlinks/plugins/app_tracking_transparency/ios`)
   - appsflyer_sdk (from `.symlinks/plugins/appsflyer_sdk/ios`)
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
@@ -168,6 +171,8 @@ SPEC REPOS:
     - PromisesObjC
 
 EXTERNAL SOURCES:
+  app_tracking_transparency:
+    :path: ".symlinks/plugins/app_tracking_transparency/ios"
   appsflyer_sdk:
     :path: ".symlinks/plugins/appsflyer_sdk/ios"
   firebase_analytics:
@@ -188,6 +193,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
+  app_tracking_transparency: e169b653478da7bb15a6c61209015378ca73e375
   appsflyer_sdk: 8e77c7f47570e4596545b9fa16eb9114676c71e3
   AppsFlyerFramework: 63577b60d6b9fcdab60135289979e7d1c9ec79b9
   Firebase: d99ac19b909cd2c548339c2241ecd0d1599ab02e

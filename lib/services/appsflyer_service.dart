@@ -33,7 +33,7 @@ class AppsFlyerService {
       afDevKey: "cYmtVpJCBSET23rRv4GWXa",
       appId: "013022026",
       showDebug: true,
-      timeToWaitForATTUserAuthorization: 5,
+      timeToWaitForATTUserAuthorization: 15,
       manualStart: true,
     );
 
@@ -113,33 +113,6 @@ class AppsFlyerService {
       } else {
         debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Deep link not found");
       }
-
-      // switch (dp.status) {
-      //   case Status.FOUND:
-      //     final String? deepLinkValue = dp.deepLink?.deepLinkValue;
-      //     final Map<String, dynamic>? data = dp.deepLink?.clickEvent;
-
-      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL (Full): ${dp.toString()}");
-      //     debugPrint(
-      //       "🔗 [AppsFlyer Log] 3. UDL Click Event: ${jsonEncode(data)}",
-      //     );
-      //     debugPrint(
-      //       "🔗 [AppsFlyer Log] 3. UDL Deep Link Value: $deepLinkValue",
-      //     );
-
-      //     onDeepLinkReceived(deepLinkValue, data);
-      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL: called onDeeplinkReceived()");
-      //     break;
-      //   case Status.NOT_FOUND:
-      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Deep link not found.");
-      //     break;
-      //   case Status.ERROR:
-      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Error -> ${dp.error}");
-      //     break;
-      //   case Status.PARSE_ERROR:
-      //     debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: Parse Error");
-      //     break;
-      // }
     });
 
     await _appsflyerSdk.initSdk(
