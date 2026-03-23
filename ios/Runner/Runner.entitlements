@@ -4,8 +4,7 @@
 <dict>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:af-flutter.onelink.me</string>
-		<string>applinks:staging.akadigital.net</string>
+		<string>applinks:af-flutter.onelink.me?mode=developer</string>
 	</array>
 </dict>
 </plist>

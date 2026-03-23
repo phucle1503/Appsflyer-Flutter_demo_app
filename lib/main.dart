@@ -8,6 +8,8 @@ import 'pages/login_page.dart';
 import 'pages/cart_page.dart';
 import 'pages/test_page.dart';
 import 'package:af_flutter_sample/services/appsflyer_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 @pragma('vm:entry-point')
 void _onKilledStateNotificationClickedHandler(
@@ -15,7 +17,6 @@ void _onKilledStateNotificationClickedHandler(
   debugPrint('[KilledState] Payload: $payload');
 }
 
-// GlobalKey giúp điều hướng từ bất cứ đâu mà không cần BuildContext
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
@@ -26,7 +27,6 @@ void main() async {
       debugPrint("🔗 [AppsFlyer Deeplink] DeepLink value: $value");
 
       if (value != null) {
-        // Đợi 1 frame để chắc chắn Navigator đã mount xong (quan trọng cho Cold Start)
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _handleAppsFlyerNavigation(value);
         });
@@ -36,7 +36,6 @@ void main() async {
   runApp(const MyApp());
 }
 
-/// Hàm điều hướng dành riêng cho AppsFlyer Deep Link Value
 void _handleAppsFlyerNavigation(String linkValue) async {
   var navState = navigatorKey.currentState;
   int retryCount = 0;
@@ -112,12 +111,35 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    _requestATT();
+  }
+
+  Future<void> _requestATT() async {
+    if (Platform.isIOS) {
+      await Future.delayed(const Duration(seconds: 2));
+      
+      var status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      
+      if (status == TrackingStatus.notDetermined) {
+        status = await AppTrackingTransparency.requestTrackingAuthorization();
+      }
+
+      if (status == TrackingStatus.authorized) {
+        debugPrint("🔗 [AppsFlyer Log] [ATT] ✅ User granted tracking permission");
+
+        final String idfa = await AppTrackingTransparency.getAdvertisingIdentifier();
+        debugPrint("🔗 [AppsFlyer Log] [ATT] 🆔 IDFA: $idfa");
+
+      } else {
+        debugPrint("🔗 [AppsFlyer Log] [ATT] ❌ User denied or restricted permission (Status: $status)");
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey, // Rất quan trọng
+      navigatorKey: navigatorKey, 
       title: 'AppsFlyer Demo App',
       theme: ThemeData(primarySwatch: Colors.red),
       home: const TestPage(),
