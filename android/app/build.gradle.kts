@@ -78,5 +78,6 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-hls:1.1.1")
     implementation("androidx.media3:media3-ui:1.1.1")
     implementation("androidx.concurrent:concurrent-futures:1.1.0")
+    implementation("com.appsflyer:af-android-sdk:6.14.0")
 }
 
