@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>AF Flutter Sample App</string>
+	<string>aka_appsflyer_flutter_v1</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -35,12 +35,6 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>CleverTapAccountID</key>
-	<string>485-766-KW7Z</string>
-	<key>CleverTapRegion</key>
-	<string>sg1</string>
-	<key>CleverTapToken</key>
-	<string>66a-5b4</string>
 	<key>FlutterDeepLinkingEnabled</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
@@ -57,6 +51,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -64,15 +59,30 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
 	<key>NSLocationWhenInUseUsageDescription</key>
     <string>Ứng dụng cần truy cập vị trí của bạn để cung cấp dịch vụ chính xác hơn.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Ứng dụng cần truy cập vị trí của bạn ngay cả khi chạy nền.</string>
-
     <key>NSUserTrackingUsageDescription</key>
     <string>Ứng dụng cần quyền này để đo lường hiệu quả chiến dịch quảng cáo và cải thiện trải nghiệm của bạn.</string>
-
     <key>PermissionGroupNotification</key>
     <string>Ứng dụng muốn gửi thông báo cho bạn về các cập nhật mới nhất.</string>
+
+	<key>SKAdNetworkItems</key>
+		<array>
+			<dict><key>SKAdNetworkIdentifier</key><string>v9wttpbfk9.skadnetwork</string></dict>
+			<dict><key>SKAdNetworkIdentifier</key><string>n38lu8286q.skadnetwork</string></dict>
+			<dict><key>SKAdNetworkIdentifier</key><string>cstr6suwn9.skadnetwork</string></dict>
+			<dict><key>SKAdNetworkIdentifier</key><string>eqhxz8m8av.skadnetwork</string></dict>
+			<dict><key>SKAdNetworkIdentifier</key><string>mj797d8u6f.skadnetwork</string></dict>
+			<dict><key>SKAdNetworkIdentifier</key><string>22mmun2rn5.skadnetwork</string></dict>
+			<dict><key>SKAdNetworkIdentifier</key><string>424m5254lk.skadnetwork</string></dict>
+			<dict><key>SKAdNetworkIdentifier</key><string>9yg77x724h.skadnetwork</string></dict>
+			<dict><key>SKAdNetworkIdentifier</key><string>com.apple.ads</string></dict>
+		</array>
+
+	<key>NSAdvertisingAttributionReportEndpoint</key>
+	<string>https://appsflyer-skadnetwork.com/</string>
 </dict>
 </plist>

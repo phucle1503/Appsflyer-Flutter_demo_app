@@ -16,7 +16,7 @@ class AppsFlyerService {
   AppsflyerSdk get sdk {
     if (!_isInitialized) {
       debugPrint(
-          "🔗 [AppsFlyer Log] ⚠️Cảnh báo: Truy cập SDK khi chưa init xong. Đang trả về instance tạm thời.");
+          "🔗 [AppsFlyer Log] ⚠️ Cảnh báo: Truy cập SDK khi chưa init xong. Đang trả về instance tạm thời.");
       // throw Exception(
       //     "🔗 [AppsFlyer Log] AppsFlyerService not initialized. Call init() first.");
     }
@@ -101,6 +101,8 @@ class AppsFlyerService {
           _hasNavigated = true;
           debugPrint(
               "🔗 [AppsFlyer Log] 3. UDL Deep Link Value: $deepLinkValue");
+          debugPrint(
+              "🔗 [AppsFlyer Log] 3. UDL Data: $data");
           onDeepLinkReceived(deepLinkValue, data);
           debugPrint("🔗 [AppsFlyer Log] 3. UDL: called onDeeplinkReceived()");
         }
