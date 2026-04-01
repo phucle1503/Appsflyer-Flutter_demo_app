@@ -36,8 +36,6 @@ public class MainActivity extends FlutterActivity {
         Intent intent = getIntent();
         if (intent != null) {
             setIntent(intent);
-            // AppsFlyerLib.getInstance().sendPushNotificationData(this);
-            // Log.d("🔗 [AppsFlyer Log]", "onCreate: Sent Push Data to AppsFlyer");
         }
     }
 
@@ -45,21 +43,5 @@ public class MainActivity extends FlutterActivity {
     public void onNewIntent(@NonNull Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);  
-
-        // if (intent.getData() != null) {
-        //     Log.d("🔗 [AppsFlyer Log]", "[onNewIntent] Link nhận được tại Native: " + intent.getData().toString());
-        // }
-
-        //     AppsFlyerLib.getInstance().sendPushNotificationData(this);
-        //     AppsFlyerLib.getInstance().performOnDeepLinking(intent, this);
-        //     AppsFlyerLib.getInstance().start(this);
-
-        // new Handler(Looper.getMainLooper()).postDelayed(() -> {
-        //     new MethodChannel(getFlutterEngine().getDartExecutor().getBinaryMessenger(), "aka.digital/appsflyer_bridge")
-        //         .invokeMethod("onNativePushClick", "intent_updated");
-        // }, 500);
-
-        // Log.d("🔗 [AppsFlyer Log]", "[onNewIntent] Native gửi intent_updated về Flutter (sau start)" );
-
     }
 }

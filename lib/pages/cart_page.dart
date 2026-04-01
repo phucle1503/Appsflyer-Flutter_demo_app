@@ -23,8 +23,6 @@ class Cartpage extends StatelessWidget {
             })
         .toList();
 
-    // CleverTapPlugin.recordChargedEvent(chargeDetails, itemData);
-
     for (final item in Cart.items) {
       item.product.stock =
           (item.product.stock - item.qty).clamp(0, double.infinity).toInt();

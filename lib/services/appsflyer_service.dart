@@ -13,12 +13,11 @@ class AppsFlyerService {
   late AppsflyerSdk _appsflyerSdk;
   bool _isInitialized = false;
   bool _hasNavigated = false;
-  bool _isProcessingPush = false; // Biến khóa mới
+  bool _isProcessingPush = false;
   String? _lastProcessedLink;
   DateTime? _lastNavigatedTime;
   Timer? _fallbackTimer;
   Map<String, dynamic>? _pendingPushPayload;
-  Map<String, dynamic>? _currentForegroundPayload;
 
   static const platform = MethodChannel('aka.digital/appsflyer_bridge');
 
@@ -41,29 +40,6 @@ class AppsFlyerService {
   }) async {
     if (_isInitialized) return;
     _onDeepLinkCallback = onDeepLinkReceived;
-
-    // platform.setMethodCallHandler((MethodCall call) async {
-    //   switch (call.method) {
-    //     case "onNativePushClick":
-    //       debugPrint(
-    //           "🔗 [AppsFlyer Log] 🚩 Nhận tín hiệu từ Native: ${call.arguments}");
-
-    //       if (_currentForegroundPayload != null) {
-    //         handlePushNotification(_currentForegroundPayload!);
-    //         debugPrint(
-    //             "🔗 [AppsFlyer Log] 🚩 Gọi handlePushNotification với $_currentForegroundPayload");
-    //       } else {
-    //         _appsflyerSdk.performOnDeepLinking();
-    //         debugPrint(
-    //             "🔗 [AppsFlyer Log] 🚩 Gọi performOnDeepLinking với $_currentForegroundPayload");
-    //       }
-    //       break;
-
-    //     default:
-    //       debugPrint(
-    //           "🔗 [AppsFlyer Log] 🚩 Không nhận được tín hiệu từ Native: ${call.method}");
-    //   }
-    // });
 
     final Completer<void> initCompleter = Completer<void>();
 
@@ -114,6 +90,7 @@ class AppsFlyerService {
     _appsflyerSdk.onDeepLinking((DeepLinkResult dp) {
       debugPrint(
           "🔗 [AppsFlyer Log] 3. UDL Callback Triggered. Status: ${dp.status}");
+      debugPrint("🔗 [AppsFlyer Log] 3. UDL (Full) : ${jsonEncode(dp)}");
       switch (dp.status) {
         case Status.FOUND:
           final String? deepLinkValue = dp.deepLink?.deepLinkValue;
@@ -134,14 +111,12 @@ class AppsFlyerService {
         case Status.PARSE_ERROR:
           debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: PARSE_ERROR");
           break;
-
-        default:
-          debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: (${dp.status})");
       }
     });
 
     if (Platform.isAndroid) {
       _appsflyerSdk.performOnDeepLinking();
+      debugPrint("🔗 [AppsFlyer Log] 3. UDL: Gọi performOnDeepLinking()");
     }
 
     await _appsflyerSdk.initSdk(
@@ -229,7 +204,6 @@ class AppsFlyerService {
     }
 
     _isProcessingPush = true;
-    _currentForegroundPayload = messageData;
     _hasNavigated = false;
     _lastProcessedLink = null;
 
@@ -265,9 +239,9 @@ class AppsFlyerService {
 
     Timer(const Duration(milliseconds: 1500), () {
       if (!_hasNavigated) {
-        // debugPrint(
-        //     "🔗 [AppsFlyer Log] [handlePushNotification] ⚡ 3: Gọi _handleManualFallback()");
-        // _handleManualFallback(messageData);
+        debugPrint(
+            "🔗 [AppsFlyer Log] [handlePushNotification] ⚡ 3: Gọi _handleManualFallback()");
+        _handleManualFallback(messageData);
       }
 
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -309,5 +283,13 @@ class AppsFlyerService {
   void resetNavigationFlag() {
     _hasNavigated = false;
     _lastProcessedLink = null;
+  }
+
+  void performOnDeepLinking() {
+    if (_isInitialized && Platform.isAndroid) {
+      debugPrint(
+          "🔗 [AppsFlyer Log] ⚡ Chủ động kích hoạt performOnDeepLinking()");
+      _appsflyerSdk.performOnDeepLinking();
+    }
   }
 }
