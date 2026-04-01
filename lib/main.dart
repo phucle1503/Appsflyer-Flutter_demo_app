@@ -1,59 +1,94 @@
 import 'dart:io';
-import 'package:af_flutter_sample/pages/checkout_page.dart';
-import 'package:af_flutter_sample/pages/product_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:af_flutter_sample/services/appsflyer_service.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'pages/checkout_page.dart';
+import 'pages/product_page.dart';
 import 'pages/login_page.dart';
 import 'pages/cart_page.dart';
 import 'pages/test_page.dart';
-import 'package:af_flutter_sample/services/appsflyer_service.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 @pragma('vm:entry-point')
 void _onKilledStateNotificationClickedHandler(
-    Map<String, dynamic> payload) async {
-  debugPrint('[KilledState] Payload: $payload');
+  Map<String, dynamic> payload,
+) async {
+  debugPrint('🔗 [AppsFlyer Log] [KilledState] Payload: $payload');
+}
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+
+  debugPrint(
+    "🔗 [AppsFlyer Log] [FCM - firebaseMessagingBackgroundHandler] 📩 Nhận Push ở Background/Killed",
+  );
+  debugPrint(
+      "🔗 [AppsFlyer Log] [FCM - firebaseMessagingBackgroundHandler] 📩 Data: ${message.data}");
 }
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    if (Platform.isIOS) {
+      await Firebase.initializeApp().timeout(const Duration(seconds: 5));
+    } else {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    debugPrint("🔗 [AppsFlyer Log] [Firebase Init Error]: $e");
+  }
+  
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  final appsFlyerService = AppsFlyerService();
 
-  await AppsFlyerService().init(
+  await appsFlyerService.init(
     onDeepLinkReceived: (value, fullData) {
-      debugPrint("🔗 [AppsFlyer Deeplink] DeepLink value: $value");
-
       if (value != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _handleAppsFlyerNavigation(value);
-        });
+        Future.microtask(() => _handleAppsFlyerNavigation(value));
       }
     },
   );
+
+  RemoteMessage? initialMessage =
+      await FirebaseMessaging.instance.getInitialMessage();
+
+  if (initialMessage != null) {
+    debugPrint(
+      "🔗 [AppsFlyer Log] [FCM - initialMessage] 💀 Phát hiện App mở từ trạng thái Kill.",
+    );
+    debugPrint(
+        "🔗 [AppsFlyer Log] [FCM - initialMessage] 📩 Data: ${initialMessage.data}");
+
+    // debugPrint(
+    //   "🔗 [AppsFlyer Log] [FCM - initialMessage] ⚡ Gọi handlePushNotification()",
+    // );
+    // appsFlyerService.handlePushNotification(initialMessage.data);
+  }
+
   runApp(const MyApp());
 }
 
 void _handleAppsFlyerNavigation(String linkValue) async {
-  var navState = navigatorKey.currentState;
-  int retryCount = 0;
-
-  while (navState == null && retryCount < 10) {
-    await Future.delayed(const Duration(milliseconds: 500));
-    navState = navigatorKey.currentState;
-    retryCount++;
-    debugPrint("🔗 [AppsFlyer Log] ⏳ Đang đợi Navigator... lần $retryCount");
+  int retry = 0;
+  while (navigatorKey.currentState == null && retry < 10) {
+    await Future.delayed(const Duration(milliseconds: 200));
+    retry++;
   }
 
+  final navState = navigatorKey.currentState;
   if (navState == null) {
-    debugPrint("🔗 [AppsFlyer Log] ❌ Không thể tìm thấy Navigator sau 5 giây.");
-    AppsFlyerService().resetNavigationFlag();
+    debugPrint(
+      "🔗 [AppsFlyer Log] [_handleAppsFlyerNavigation] ⏳ Navigator chưa sẵn sàng, đợi frame tiếp theo...",
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handleAppsFlyerNavigation(linkValue);
+    });
     return;
   }
-
-  debugPrint("🔗 [AppsFlyer Log] 🚀 Bắt đầu Push trang: $linkValue");
 
   Widget? targetPage;
 
@@ -74,12 +109,12 @@ void _handleAppsFlyerNavigation(String linkValue) async {
       targetPage = const TestPage();
       break;
     default:
-      // Nếu linkValue là một URL đầy đủ (ví dụ: https://...)
       if (linkValue.startsWith('http')) {
         _launchURL(linkValue);
       } else {
         debugPrint(
-            '🔗 [AppsFlyer Log] ⚠️ Deeplink value "$linkValue" chưa được mapping.');
+          '🔗 [AppsFlyer Log] ⚠️ Deeplink value "$linkValue" chưa được mapping.',
+        );
       }
       AppsFlyerService().resetNavigationFlag();
       return;
@@ -106,40 +141,98 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  static const platform = MethodChannel('deeplink_channel');
-
   @override
   void initState() {
     super.initState();
     _requestATT();
+    _setupFirebaseListeners();
+    _getAndLogPushToken();
+  }
+
+  void _setupFirebaseListeners() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint(
+        "🔗 [AppsFlyer Log] [FCM] onMessage - 📩 Nhận Push khi app Foreground",
+      );
+      debugPrint(
+          "🔗 [AppsFlyer Log] [FCM] onMessage - 📩 Data: ${message.data}");
+
+      if (Platform.isAndroid) {
+        AppsFlyerService().performOnDeepLinking();
+        debugPrint(
+            "🔗 [AppsFlyer Log] [FCM] onMessage - ⚡ Gọi performOnDeepLinking()");
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint(
+          "🔗 [AppsFlyer Log] [FCM] onMessageOpenedApp - ⚡ User click vào Push");
+
+      debugPrint(
+          "🔗 [AppsFlyer Log] [FCM] onMessageOpenedApp - ⚡ Gọi handlePushNotification()");
+      AppsFlyerService().handlePushNotification(message.data);
+    });
   }
 
   Future<void> _requestATT() async {
     if (Platform.isIOS) {
       await Future.delayed(const Duration(seconds: 2));
-      
+
       var status = await AppTrackingTransparency.trackingAuthorizationStatus;
-      
+
       if (status == TrackingStatus.notDetermined) {
         status = await AppTrackingTransparency.requestTrackingAuthorization();
       }
 
       if (status == TrackingStatus.authorized) {
-        debugPrint("🔗 [AppsFlyer Log] [ATT] ✅ User granted tracking permission");
+        debugPrint(
+          "🔗 [AppsFlyer Log] [ATT] ✅ User granted tracking permission",
+        );
 
-        final String idfa = await AppTrackingTransparency.getAdvertisingIdentifier();
+        final String idfa =
+            await AppTrackingTransparency.getAdvertisingIdentifier();
         debugPrint("🔗 [AppsFlyer Log] [ATT] 🆔 IDFA: $idfa");
+      } else {
+        debugPrint(
+          "🔗 [AppsFlyer Log] [ATT] ❌ User denied or restricted permission (Status: $status)",
+        );
+      }
+    }
+  }
+
+  Future<void> _getAndLogPushToken() async {
+    try {
+      NotificationSettings settings = await FirebaseMessaging.instance
+          .requestPermission(alert: true, badge: true, sound: true);
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        debugPrint('🔗 [FCM] 🔔 User đã cấp quyền Push');
+
+        String? fcmToken = await FirebaseMessaging.instance.getToken();
+        String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+
+        if (fcmToken != null) {
+          debugPrint('🔗 [FCM] 🔔 FCM TOKEN: $fcmToken');
+        }
+
+        if (apnsToken != null) {
+          debugPrint('🔗 [FCM] 🍎 APNS TOKEN: $apnsToken');
+        }
 
       } else {
-        debugPrint("🔗 [AppsFlyer Log] [ATT] ❌ User denied or restricted permission (Status: $status)");
+        debugPrint(
+          '🔗 [FCM] 🔔 User chưa cấp quyền Push',
+        );
       }
+    } catch (e) {
+      debugPrint('🔗 [FCM] 🔔 Lỗi khi lấy Token: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey, 
+      navigatorKey: navigatorKey,
       title: 'AppsFlyer Demo App',
       theme: ThemeData(primarySwatch: Colors.red),
       home: const TestPage(),

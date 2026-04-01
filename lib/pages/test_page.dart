@@ -488,9 +488,9 @@ class _TestPageState extends State<TestPage> {
             null, // Không cần additional parameters
           );
     } on Exception catch (e) {
-      print("Error logging af_login: $e");
+      print("🔗 [AppsFlyer Log] Error logging af_login: $e");
     }
-    print("Result af_login: $result");
+    print("🔗 [AppsFlyer Log] Result af_login: $result");
   }
 
   Future<void> _sendAfCompleteRegistrationEvent() async {
@@ -505,9 +505,9 @@ class _TestPageState extends State<TestPage> {
             eventValues,
           );
     } on Exception catch (e) {
-      print("Error logging af_complete_registration: $e");
+      print("🔗 [AppsFlyer Log] Error logging af_complete_registration: $e");
     }
-    print("Result af_complete_registration: $result");
+    print("🔗 [AppsFlyer Log] Result af_complete_registration: $result");
   }
 
   Future<void> _sendAfOpenAccountSuccessEvent() async {
@@ -524,9 +524,9 @@ class _TestPageState extends State<TestPage> {
             eventValues,
           );
     } on Exception catch (e) {
-      print("Error logging open_account_success: $e");
+      print("🔗 [AppsFlyer Log] Error logging open_account_success: $e");
     }
-    print("Result open_account_success: $result");
+    print("🔗 [AppsFlyer Log] Result open_account_success: $result");
   }
 
   Future<void> _sendAfOpenAccountRejectedEvent() async {
@@ -541,9 +541,9 @@ class _TestPageState extends State<TestPage> {
             eventValues,
           );
     } on Exception catch (e) {
-      print("Error logging open_account_rejected: $e");
+      print("🔗 [AppsFlyer Log] Error logging open_account_rejected: $e");
     }
-    print("Result open_account_rejected: $result");
+    print("🔗 [AppsFlyer Log] Result open_account_rejected: $result");
   }
 
   void _sendCustomEvent_AF() async {
