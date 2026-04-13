@@ -41,7 +41,7 @@ void main() async {
   } catch (e) {
     debugPrint("🔗 [AppsFlyer Log] [Firebase Init Error]: $e");
   }
-  
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   final appsFlyerService = AppsFlyerService();
 
@@ -150,27 +150,38 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _setupFirebaseListeners() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       debugPrint(
         "🔗 [AppsFlyer Log] [FCM] onMessage - 📩 Nhận Push khi app Foreground",
       );
       debugPrint(
           "🔗 [AppsFlyer Log] [FCM] onMessage - 📩 Data: ${message.data}");
 
-      if (Platform.isAndroid) {
-        AppsFlyerService().performOnDeepLinking();
+      if (Platform.isIOS) {
+        await Future.delayed(Duration(milliseconds: 3000));
+        AppsFlyerService().handlePushNotification(message.data);
         debugPrint(
-            "🔗 [AppsFlyer Log] [FCM] onMessage - ⚡ Gọi performOnDeepLinking()");
+            "🔗 [AppsFlyer Log] [FCM] [iOS] onMessage - ⚡ Gọi handlePushNotification()");
       }
     });
 
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       debugPrint(
           "🔗 [AppsFlyer Log] [FCM] onMessageOpenedApp - ⚡ User click vào Push");
 
-      debugPrint(
-          "🔗 [AppsFlyer Log] [FCM] onMessageOpenedApp - ⚡ Gọi handlePushNotification()");
-      AppsFlyerService().handlePushNotification(message.data);
+      // if (Platform.isAndroid) {
+      //   await Future.delayed(Duration(milliseconds: 3000));
+      //   AppsFlyerService().performOnDeepLinking();
+      //   debugPrint(
+      //       "🔗 [AppsFlyer Log] [FCM] [Android] onMessageOpenedApp - ⚡ Gọi performOnDeepLinking()");
+      // }
+
+      if (Platform.isIOS) {
+        await Future.delayed(Duration(milliseconds: 3000));
+        AppsFlyerService().handlePushNotification(message.data);
+        debugPrint(
+            "🔗 [AppsFlyer Log] [FCM] [iOS] onMessageOpenedApp - ⚡ Gọi handlePushNotification()");
+      }
     });
   }
 
@@ -218,7 +229,6 @@ class _MyAppState extends State<MyApp> {
         if (apnsToken != null) {
           debugPrint('🔗 [FCM] 🍎 APNS TOKEN: $apnsToken');
         }
-
       } else {
         debugPrint(
           '🔗 [FCM] 🔔 User chưa cấp quyền Push',

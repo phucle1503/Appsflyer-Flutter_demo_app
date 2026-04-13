@@ -16,7 +16,7 @@ plugins {
 
 android {
     namespace = "akademo.aka_appsflyer_flutter_v1"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     signingConfigs {
@@ -37,10 +37,11 @@ android {
     defaultConfig {
         applicationId = "akademo.aka_appsflyer_flutter_v1"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
+        missingDimensionStrategy("default", "production")
     }
 
     buildTypes {

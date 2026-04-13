@@ -43,5 +43,22 @@ public class MainActivity extends FlutterActivity {
     public void onNewIntent(@NonNull Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);  
+
+        // 1. Lấy link từ payload của Firebase (thường nằm trong extras)
+        // String afPushLink = null;
+        // if (intent.getExtras() != null) {
+        //     afPushLink = intent.getExtras().getString("af_push_link");
+        //     Log.d("MainActivity", "🔗 [AppsFlyer Log] afPushLink: " + afPushLink);
+        // }
+
+        // 2. NẾU tìm thấy link, hãy "ép" nó vào Data của Intent
+        // if (afPushLink != null && !afPushLink.isEmpty()) {
+        //     intent.setData(android.net.Uri.parse(afPushLink));
+        //     Log.d("MainActivity", "🔗 [AppsFlyer Log] Đã ép link vào Intent Data: " + afPushLink);
+        // }
+
+        // intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     }
 }

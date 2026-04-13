@@ -18,7 +18,6 @@ class AppsFlyerService {
   DateTime? _lastNavigatedTime;
   Timer? _fallbackTimer;
   Map<String, dynamic>? _pendingPushPayload;
-
   static const platform = MethodChannel('aka.digital/appsflyer_bridge');
 
   late Function(String? deepLinkValue, Map<String, dynamic>? fullData)
@@ -29,7 +28,8 @@ class AppsFlyerService {
   AppsflyerSdk get sdk {
     if (!_isInitialized) {
       debugPrint(
-          "🔗 [AppsFlyer Log] ⚠️ Cảnh báo: Truy cập SDK khi chưa init xong. Đang trả về instance tạm thời.");
+        "🔗 [AppsFlyer Log] ⚠️ Cảnh báo: Truy cập SDK khi chưa init xong. Đang trả về instance tạm thời.",
+      );
     }
     return _appsflyerSdk;
   }
@@ -40,6 +40,21 @@ class AppsFlyerService {
   }) async {
     if (_isInitialized) return;
     _onDeepLinkCallback = onDeepLinkReceived;
+
+    // platform.setMethodCallHandler((MethodCall call) async {
+    //   debugPrint(
+    //       "🔗 [AppsFlyer Log] 📩 Nhận MethodCall từ Native: ${call.method}");
+
+    //   if (call.method == "onNativePushClick") {
+    //     final String? linkFromNative = call.arguments as String?;
+    //     debugPrint(
+    //         "🔗 [AppsFlyer Log] 🚩 Link từ Native đẩy về: $linkFromNative");
+
+    //     if (linkFromNative != null) {
+    //       _handleManualFallback({"af_push_link": linkFromNative});
+    //     }
+    //   }
+    // });
 
     final Completer<void> initCompleter = Completer<void>();
 
@@ -89,7 +104,8 @@ class AppsFlyerService {
     // 3. -------- Unified Deep Linking (UDL) --------
     _appsflyerSdk.onDeepLinking((DeepLinkResult dp) {
       debugPrint(
-          "🔗 [AppsFlyer Log] 3. UDL Callback Triggered. Status: ${dp.status}");
+        "🔗 [AppsFlyer Log] 3. UDL Callback Triggered.",
+      );
       debugPrint("🔗 [AppsFlyer Log] 3. UDL (Full) : ${jsonEncode(dp)}");
       switch (dp.status) {
         case Status.FOUND:
@@ -105,7 +121,7 @@ class AppsFlyerService {
           break;
 
         case Status.NOT_FOUND:
-          debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: NOT_FOUND.");
+          debugPrint("🔗 [AppsFlyer Log] 3. UDL Status: NOT_FOUND");
           break;
 
         case Status.PARSE_ERROR:
@@ -116,7 +132,8 @@ class AppsFlyerService {
 
     if (Platform.isAndroid) {
       _appsflyerSdk.performOnDeepLinking();
-      debugPrint("🔗 [AppsFlyer Log] 3. UDL: Gọi performOnDeepLinking()");
+      debugPrint(
+          "🔗 [AppsFlyer Log] 3. UDL: isAndroid - Gọi performOnDeepLinking()");
     }
 
     await _appsflyerSdk.initSdk(
@@ -128,13 +145,15 @@ class AppsFlyerService {
     _appsflyerSdk.startSDK(
       onSuccess: () {
         debugPrint(
-            "🔗 [AppsFlyer Log] ✅ AppsFlyer SDK initialized successfully.");
+          "🔗 [AppsFlyer Log] ✅ AppsFlyer SDK initialized successfully.",
+        );
         _isInitialized = true;
         ;
 
         if (_pendingPushPayload != null) {
           debugPrint(
-              "🔗 [AppsFlyer Log] 🚀 Xử lý Pending Push Payload. Gọi handlePushNotification()");
+            "🔗 [AppsFlyer Log] 🚀 Xử lý Pending Push Payload. Gọi handlePushNotification()",
+          );
           handlePushNotification(_pendingPushPayload!);
           _pendingPushPayload = null;
         }
@@ -153,16 +172,22 @@ class AppsFlyerService {
       const Duration(seconds: 10),
       onTimeout: () {
         debugPrint(
-            "🔗 [AppsFlyer Log] ⚠️ SDK Init Timeout (10s) - Tiếp tục chạy App.");
+          "🔗 [AppsFlyer Log] ⚠️ SDK Init Timeout (10s) - Tiếp tục chạy App.",
+        );
       },
     );
   }
 
-  void _executeNavigation(String? value, Map<String, dynamic>? data,
-      Function callback, String source) {
+  void _executeNavigation(
+    String? value,
+    Map<String, dynamic>? data,
+    Function callback,
+    String source,
+  ) {
     if (value == null || value.isEmpty) {
       debugPrint(
-          "🔗 [AppsFlyer Log] [_executeNavigation] ⚠️ $source: Không có deep_link_value để điều hướng.");
+        "🔗 [AppsFlyer Log] [_executeNavigation] ⚠️ $source: Không có deep_link_value để điều hướng.",
+      );
       return;
     }
 
@@ -170,7 +195,8 @@ class AppsFlyerService {
 
     if (_hasNavigated) {
       debugPrint(
-          "🔗 [AppsFlyer Log] [_executeNavigation] 🚫 $source: Bị chặn do _hasNavigated = true.");
+        "🔗 [AppsFlyer Log] [_executeNavigation] 🚫 $source: Bị chặn do _hasNavigated = true.",
+      );
       return;
     }
 
@@ -179,12 +205,14 @@ class AppsFlyerService {
         _lastNavigatedTime != null &&
         now.difference(_lastNavigatedTime!).inSeconds < 2) {
       debugPrint(
-          "🔗 [AppsFlyer Log] [_executeNavigation]  ⚠️ Chặn trùng lặp từ $source: $value");
+        "🔗 [AppsFlyer Log] [_executeNavigation]  ⚠️ Chặn trùng lặp từ $source: $value",
+      );
       return;
     }
 
     debugPrint(
-        "🔗 [AppsFlyer Log] [_executeNavigation] 🚀 [$source] Chấp nhận điều hướng đến: $value");
+      "🔗 [AppsFlyer Log] [_executeNavigation] 🚀 [$source] Chấp nhận điều hướng đến: $value",
+    );
 
     _lastProcessedLink = value;
     _lastNavigatedTime = now;
@@ -192,18 +220,18 @@ class AppsFlyerService {
     _isProcessingPush = false;
 
     Future.delayed(const Duration(milliseconds: 2000), () {
-      debugPrint(
-          "🔗 [AppsFlyer Log] [_executeNavigation] ⚡ Thực thi callback điều hướng sau delay cho: $value");
       callback(value, data);
       debugPrint(
-          "🔗 [AppsFlyer Log] [_executeNavigation] ✅ [$source] Đã thực thi onDeepLinkReceived() cho $value.");
+        "🔗 [AppsFlyer Log] [_executeNavigation] ✅ [$source] Đã thực thi onDeepLinkReceived() cho $value.",
+      );
     });
   }
 
   void handlePushNotification(Map<String, dynamic> messageData) {
     if (_isProcessingPush || _hasNavigated) {
       debugPrint(
-          "🔗 [AppsFlyer Log] [handlePushNotification] 🛡️ Chặn tín hiệu trùng lặp (Processing: $_isProcessingPush, Navigated: $_hasNavigated)");
+        "🔗 [AppsFlyer Log] [handlePushNotification] 🛡️ Chặn tín hiệu trùng lặp (Processing: $_isProcessingPush, Navigated: $_hasNavigated)",
+      );
       return;
     }
 
@@ -213,45 +241,36 @@ class AppsFlyerService {
 
     if (!_isInitialized) {
       debugPrint(
-          "🔗 [AppsFlyer Log] [handlePushNotification] ⏳ SDK chưa init, lưu payload chờ xử lý.");
+        "🔗 [AppsFlyer Log] [handlePushNotification] ⏳ SDK chưa init, lưu payload chờ xử lý.",
+      );
       _pendingPushPayload = messageData;
       _isProcessingPush = false;
       return;
     }
 
     debugPrint(
-        "🔗 [AppsFlyer Log] [handlePushNotification] ⚡ Bắt đầu xử lý luồng Push mới. Gọi sendPushNotificationData()");
+      "🔗 [AppsFlyer Log] [handlePushNotification] ⚡ Gọi sendPushNotificationData()",
+    );
     _appsflyerSdk.sendPushNotificationData(messageData);
 
     _fallbackTimer?.cancel();
 
     _fallbackTimer = Timer(const Duration(milliseconds: 1500), () {
-      if (!_hasNavigated) {
-        // debugPrint(
-        //     "🔗 [AppsFlyer Log] [handlePushNotification] ⚡ 1: Gọi performOnDeepLinking()");
-        // _appsflyerSdk.performOnDeepLinking();
-      }
+      if (!_hasNavigated) {}
     });
 
     Timer(const Duration(milliseconds: 1500), () {
       if (!_hasNavigated) {
         // debugPrint(
-        //     "🔗 [AppsFlyer Log] [handlePushNotification] ⚡ 2: Gọi performOnDeepLinking()");
-        // _appsflyerSdk.performOnDeepLinking();
-      }
-    });
-
-    Timer(const Duration(milliseconds: 1500), () {
-      if (!_hasNavigated) {
-        // debugPrint(
-        //     "🔗 [AppsFlyer Log] [handlePushNotification] ⚡ 3: Gọi _handleManualFallback()");
+        //     "🔗 [AppsFlyer Log] [handlePushNotification] ⚡ Gọi _handleManualFallback()");
         // _handleManualFallback(messageData);
       }
 
       Future.delayed(const Duration(milliseconds: 500), () {
         _isProcessingPush = false;
         debugPrint(
-            "🔗 [AppsFlyer Log] [handlePushNotification] 🔓 Đã mở khóa _isProcessingPush.");
+          "🔗 [AppsFlyer Log] [handlePushNotification] 🔓 Đã mở khóa _isProcessingPush.",
+        );
       });
     });
   }
@@ -260,27 +279,36 @@ class AppsFlyerService {
     final String? url = data['af_push_link']?.toString();
     if (url != null) {
       debugPrint(
-          "🔗 [AppsFlyer Log] [_handleManualFallback] Tìm thấy giá trị af_push_link ");
+        "🔗 [AppsFlyer Log] [_handleManualFallback] Tìm thấy giá trị af_push_link ",
+      );
       try {
         Uri uri = Uri.parse(url);
         String? value = uri.queryParameters['deep_link_value'];
 
         if (value != null) {
           debugPrint(
-              "🔗 [AppsFlyer Log] [_handleManualFallback] Tìm thấy giá trị deep_link_value: $value");
+            "🔗 [AppsFlyer Log] [_handleManualFallback] Tìm thấy giá trị deep_link_value: $value",
+          );
           _executeNavigation(
-              value, data, _onDeepLinkCallback, "ManualFallback");
+            value,
+            data,
+            _onDeepLinkCallback,
+            "ManualFallback",
+          );
         } else {
           debugPrint(
-              "🔗 [AppsFlyer Log] [_handleManualFallback] Không tìm thấy giá trị deep_link_value");
+            "🔗 [AppsFlyer Log] [_handleManualFallback] Không tìm thấy giá trị deep_link_value",
+          );
         }
       } catch (e) {
         debugPrint(
-            "🔗 [AppsFlyer Log] [_handleManualFallback]  Lỗi fallback: $e");
+          "🔗 [AppsFlyer Log] [_handleManualFallback]  Lỗi fallback: $e",
+        );
       }
     } else {
       debugPrint(
-          "🔗 [AppsFlyer Log] [_handleManualFallback] Không tìm thấy giá trị af_push_link ");
+        "🔗 [AppsFlyer Log] [_handleManualFallback] Không tìm thấy giá trị af_push_link ",
+      );
     }
   }
 
@@ -289,10 +317,9 @@ class AppsFlyerService {
     _lastProcessedLink = null;
   }
 
-  void performOnDeepLinking() {
+  Future<void> performOnDeepLinking({int ms = 2000}) async {
     if (_isInitialized && Platform.isAndroid) {
-      debugPrint(
-          "🔗 [AppsFlyer Log] ⚡ Chủ động kích hoạt performOnDeepLinking()");
+      await Future.delayed(Duration(milliseconds: ms));
       _appsflyerSdk.performOnDeepLinking();
     }
   }
