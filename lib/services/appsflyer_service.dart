@@ -19,6 +19,7 @@ class AppsFlyerService {
   DateTime? _lastNavigatedTime;
   Timer? _fallbackTimer;
   Map<String, dynamic>? _pendingPushPayload;
+  String? _appsFlyerId;
 
   static const platform = MethodChannel('aka.digital/appsflyer_bridge');
 
@@ -57,15 +58,17 @@ class AppsFlyerService {
     _appsflyerSdk.addPushNotificationDeepLinkPath(["af_push_link"]);
 
     // 1. -------- Deferred Deep Linking (Conversion Data) --------
-    _appsflyerSdk.onInstallConversionData((res) {
+    _appsflyerSdk.onInstallConversionData((res) async {
       debugPrint("🔗 [AppsFlyer Log] 1. Conversion Data Triggered.");
       debugPrint(
         "🔗 [AppsFlyer Log] 1. Conversion Data (Full): ${jsonEncode(res)}",
       );
 
+      String? currentId = await _appsflyerSdk.getAppsFlyerUID();
       LogService.sendLogToGoogleSheet(
         method: "onInstallConversionData",
         data: res,
+        afId: currentId,
       );
 
       final Map<String, dynamic> data = res['payload'] ?? res;
@@ -81,13 +84,15 @@ class AppsFlyerService {
     });
 
     // 2. -------- Direct Deep Linking (Legacy) --------
-    _appsflyerSdk.onAppOpenAttribution((res) {
+    _appsflyerSdk.onAppOpenAttribution((res) async {
       debugPrint("🔗 [AppsFlyer Log] 2. DDL (Legacy) Triggered.");
       debugPrint("🔗 [AppsFlyer Log] 2. DDL (Full): ${jsonEncode(res)}");
 
+      String? currentId = await _appsflyerSdk.getAppsFlyerUID();
       LogService.sendLogToGoogleSheet(
           method: "onAppOpenAttribution",
           data: res,
+          afId: currentId,
         );
 
       final Map<String, dynamic> data = res['payload'] ?? res;
@@ -98,11 +103,12 @@ class AppsFlyerService {
     });
 
     // 3. -------- Unified Deep Linking (UDL) --------
-    _appsflyerSdk.onDeepLinking((DeepLinkResult dp) {
+    _appsflyerSdk.onDeepLinking((DeepLinkResult dp) async {
       debugPrint(
           "🔗 [AppsFlyer Log] 3. UDL Callback Triggered. Status: ${dp.status}");
       debugPrint("🔗 [AppsFlyer Log] 3. UDL (Full) : ${jsonEncode(dp)}");
 
+      String? currentId = await _appsflyerSdk.getAppsFlyerUID();
       LogService.sendLogToGoogleSheet(
         method: "onDeepLinking",
         data: {
@@ -110,6 +116,7 @@ class AppsFlyerService {
           "error": dp.error,
           "deepLink": dp.deepLink?.clickEvent,
         },
+        afId: currentId,
       );
 
       switch (dp.status) {
@@ -147,10 +154,17 @@ class AppsFlyerService {
     );
 
     _appsflyerSdk.startSDK(
-      onSuccess: () {
+      onSuccess: () async {
         debugPrint(
             "🔗 [AppsFlyer Log] ✅ AppsFlyer SDK initialized successfully.");
         _isInitialized = true;
+
+        try {
+          _appsFlyerId = await _appsflyerSdk.getAppsFlyerUID();
+          debugPrint("🔗 [AppsFlyer Log] AppsFlyer ID: $_appsFlyerId");
+        } catch (e) {
+          debugPrint("🔗 [AppsFlyer Log] ❌ Lỗi lấy AppsFlyer ID: $e");
+        }
 
         if (_pendingPushPayload != null) {
           debugPrint(
@@ -315,5 +329,9 @@ class AppsFlyerService {
           "🔗 [AppsFlyer Log] ⚡ Chủ động kích hoạt performOnDeepLinking()");
       _appsflyerSdk.performOnDeepLinking();
     }
+  }
+
+  String? getAppsFlyerId() {
+    return _appsFlyerId;
   }
 }
