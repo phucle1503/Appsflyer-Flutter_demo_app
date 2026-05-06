@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'dart:io';
+import 'package:af_flutter_sample/services/log_service.dart';
 
 class AppsFlyerService {
   static final AppsFlyerService _instance = AppsFlyerService._internal();
@@ -62,6 +63,11 @@ class AppsFlyerService {
         "🔗 [AppsFlyer Log] 1. Conversion Data (Full): ${jsonEncode(res)}",
       );
 
+      LogService.sendLogToGoogleSheet(
+        method: "onInstallConversionData",
+        data: res,
+      );
+
       final Map<String, dynamic> data = res['payload'] ?? res;
       final String? linkValue = data['deep_link_value']?.toString();
       bool isFirstLaunch =
@@ -79,6 +85,11 @@ class AppsFlyerService {
       debugPrint("🔗 [AppsFlyer Log] 2. DDL (Legacy) Triggered.");
       debugPrint("🔗 [AppsFlyer Log] 2. DDL (Full): ${jsonEncode(res)}");
 
+      LogService.sendLogToGoogleSheet(
+          method: "onAppOpenAttribution",
+          data: res,
+        );
+
       final Map<String, dynamic> data = res['payload'] ?? res;
       final String? linkValue = data['deep_link_value']?.toString();
 
@@ -91,6 +102,16 @@ class AppsFlyerService {
       debugPrint(
           "🔗 [AppsFlyer Log] 3. UDL Callback Triggered. Status: ${dp.status}");
       debugPrint("🔗 [AppsFlyer Log] 3. UDL (Full) : ${jsonEncode(dp)}");
+
+      LogService.sendLogToGoogleSheet(
+        method: "onDeepLinking",
+        data: {
+          "status": dp.status.toString(),
+          "error": dp.error,
+          "deepLink": dp.deepLink?.clickEvent,
+        },
+      );
+
       switch (dp.status) {
         case Status.FOUND:
           final String? deepLinkValue = dp.deepLink?.deepLinkValue;
@@ -130,7 +151,6 @@ class AppsFlyerService {
         debugPrint(
             "🔗 [AppsFlyer Log] ✅ AppsFlyer SDK initialized successfully.");
         _isInitialized = true;
-        ;
 
         if (_pendingPushPayload != null) {
           debugPrint(
