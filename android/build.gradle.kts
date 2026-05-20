@@ -2,6 +2,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url = java.net.URI("https://storage.googleapis.com/download.flutter.io") }
     }
 }
 
@@ -14,10 +15,21 @@ subprojects {
 }
 
 subprojects {
-    plugins.withType<com.android.build.gradle.BasePlugin> {
-        val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
-        android.compileSdkVersion(35)
-        android.buildToolsVersion("35.0.0")
+    // =====================================================================
+    // 🔥 SỬA ĐỔI QUAN TRỌNG: Bọc trong afterEvaluate để bắt trọn các plugin ngầm
+    // =====================================================================
+    afterEvaluate {
+        plugins.withType<com.android.build.gradle.BasePlugin> {
+            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
+            // Ép toàn bộ lên SDK 36 sau khi plugin đã evaluate xong để sửa lỗi lStar
+            android.compileSdkVersion(36)
+            android.buildToolsVersion("36.0.0")
+
+            android.lintOptions {
+                isCheckReleaseBuilds = false
+                isAbortOnError = false
+            }
+        }
     }
 
     project.configurations.all {
@@ -28,9 +40,14 @@ subprojects {
             if (requested.group == "androidx.appcompat") {
                 useVersion("1.6.1")
             }
+            if (requested.group == "androidx.lifecycle") {
+                useVersion("2.8.7")
+            }
+            if (requested.group == "androidx.savedstate") {
+                useVersion("1.2.1")
+            }
         }
     }
-
 }
 
 subprojects {

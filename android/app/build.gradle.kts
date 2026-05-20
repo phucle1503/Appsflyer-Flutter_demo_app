@@ -11,12 +11,12 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services") version "4.4.0"
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "akademo.aka_appsflyer_flutter_v1"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     signingConfigs {
@@ -36,7 +36,7 @@ android {
 
     defaultConfig {
         applicationId = "akademo.aka_appsflyer_flutter_v1"
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -80,5 +80,22 @@ dependencies {
     implementation("androidx.media3:media3-ui:1.1.1")
     implementation("androidx.concurrent:concurrent-futures:1.1.0")
     implementation("com.appsflyer:af-android-sdk:6.14.0")
+}
+
+configurations.all {
+    resolutionStrategy {
+        eachDependency {
+            // Nếu phát hiện bất kỳ gói nào thuộc nhóm androidx.lifecycle, ép về bản 2.8.7
+            if (requested.group == "androidx.lifecycle") {
+                useVersion("2.8.7")
+                because("Bản Lifecycle 2.9.x lỗi kéo theo core-viewtree ma")
+            }
+            // Nếu phát hiện gói savedstate (bản đi kèm với lifecycle mới), ép về 1.2.1
+            if (requested.group == "androidx.savedstate") {
+                useVersion("1.2.1")
+                because("Đồng bộ hạ cấp savedstate tránh xung đột với lifecycle 2.8.7")
+            }
+        }
+    }
 }
 

@@ -222,6 +222,19 @@ class _TestPageState extends State<TestPage> {
           ),
           const SizedBox(height: 16),
 
+          // af_purchase
+          ElevatedButton.icon(
+            icon: const Icon(Icons.shopping_cart),
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  Colors.purple, // Đổi màu tím cho dễ phân biệt nhóm Revenue
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            label: const Text('af_purchase'),
+            onPressed: _sendAfPurchaseEvent,
+          ),
+          const SizedBox(height: 16),
+
           // af_complete_registration
           ElevatedButton.icon(
             icon: const Icon(Icons.app_registration),
@@ -491,6 +504,26 @@ class _TestPageState extends State<TestPage> {
       print("🔗 [AppsFlyer Log] Error logging af_login: $e");
     }
     print("🔗 [AppsFlyer Log] Result af_login: $result");
+  }
+
+  Future<void> _sendAfPurchaseEvent() async {
+    final Map<String, dynamic> eventValues = {
+      "af_revenue": 120.00,
+      "af_currency": "USD",
+      "af_content_id": "nike_10",
+      "item_name": "nike tiempo 10",
+    };
+
+    bool? result;
+    try {
+      result = await AppsFlyerService().sdk.logEvent(
+            "af_purchase",
+            eventValues,
+          );
+    } on Exception catch (e) {
+      print("🔗 [AppsFlyer Log] Error logging af_purchase: $e");
+    }
+    print("🔗 [AppsFlyer Log] Result af_purchase: $result");
   }
 
   Future<void> _sendAfCompleteRegistrationEvent() async {

@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  clevertap_plugin: 4.0.0
   cupertino_icons: ^1.0.2
   geolocator: ^14.0.1
   permission_handler: ^12.0.0
@@ -20,7 +21,8 @@ dependencies:
   firebase_analytics: ^11.5.2
   appsflyer_sdk: ^6.17.8
   app_tracking_transparency: ^2.0.6+1
-
+  firebase_app_distribution: ^1.1.1
+  http: ^1.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

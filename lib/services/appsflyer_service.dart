@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'dart:io';
+import 'package:af_flutter_sample/services/log_service.dart';
+import 'package:af_flutter_sample/services/clevertap_service.dart';
 
 class AppsFlyerService {
   static final AppsFlyerService _instance = AppsFlyerService._internal();
@@ -77,6 +79,11 @@ class AppsFlyerService {
         "🔗 [AppsFlyer Log] 1. Conversion Data (Full): ${jsonEncode(res)}",
       );
 
+      LogService.sendLogToGoogleSheet(
+        method: "onInstallConversionData",
+        data: res,
+      );
+
       final Map<String, dynamic> data = res['payload'] ?? res;
       final String? linkValue = data['deep_link_value']?.toString();
       bool isFirstLaunch =
@@ -94,6 +101,11 @@ class AppsFlyerService {
       debugPrint("🔗 [AppsFlyer Log] 2. DDL (Legacy) Triggered.");
       debugPrint("🔗 [AppsFlyer Log] 2. DDL (Full): ${jsonEncode(res)}");
 
+      LogService.sendLogToGoogleSheet(
+        method: "onAppOpenAttribution",
+        data: res,
+      );
+
       final Map<String, dynamic> data = res['payload'] ?? res;
       final String? linkValue = data['deep_link_value']?.toString();
 
@@ -107,6 +119,16 @@ class AppsFlyerService {
         "🔗 [AppsFlyer Log] 3. UDL Callback Triggered.",
       );
       debugPrint("🔗 [AppsFlyer Log] 3. UDL (Full) : ${jsonEncode(dp)}");
+
+      LogService.sendLogToGoogleSheet(
+        method: "onDeepLinking",
+        data: {
+          "status": dp.status.toString(),
+          "error": dp.error,
+          "deepLink": dp.deepLink?.clickEvent,
+        },
+      );
+
       switch (dp.status) {
         case Status.FOUND:
           final String? deepLinkValue = dp.deepLink?.deepLinkValue;
@@ -142,13 +164,36 @@ class AppsFlyerService {
       registerOnDeepLinkingCallback: true,
     );
 
+    // ⚡ BƯỚC ĐỒNG BỘ ID: Lấy CleverTap ID trước khi Start SDK
+    try {
+      debugPrint(
+          "🔗 [AppsFlyer Log] 🔄 Đang lấy CleverTap ID để làm Customer User ID...");
+      String? cleverTapId = await CleverTapService().getCleverTapID();
+
+      if (cleverTapId != null && cleverTapId.isNotEmpty) {
+        _appsflyerSdk.setCustomerUserId(cleverTapId);
+        debugPrint(
+            "🔗 [AppsFlyer Log] 👤 Đã thiết lập setCustomerUserId(): $cleverTapId");
+
+        var customData = {'CleverTapID': cleverTapId};
+        _appsflyerSdk.setAdditionalData(customData);
+        debugPrint(
+            "🔗 [AppsFlyer Log] ✅ Đã thiết lập setAdditionalData(): $customData");
+      } else {
+        debugPrint(
+            "🔗 [AppsFlyer Log] ⚠️ Không lấy được CleverTap ID (Giá trị trống hoặc null).");
+      }
+    } catch (e) {
+      debugPrint("🔗 [AppsFlyer Log] ❌ Lỗi xảy ra khi lấy CleverTap ID: $e");
+    }
+
+    debugPrint("🔗 [AppsFlyer Log] 🚀 Gọi startSDK()");
     _appsflyerSdk.startSDK(
       onSuccess: () {
         debugPrint(
           "🔗 [AppsFlyer Log] ✅ AppsFlyer SDK initialized successfully.",
         );
         _isInitialized = true;
-        ;
 
         if (_pendingPushPayload != null) {
           debugPrint(
@@ -169,10 +214,10 @@ class AppsFlyerService {
     );
 
     return initCompleter.future.timeout(
-      const Duration(seconds: 10),
+      const Duration(seconds: 20),
       onTimeout: () {
         debugPrint(
-          "🔗 [AppsFlyer Log] ⚠️ SDK Init Timeout (10s) - Tiếp tục chạy App.",
+          "🔗 [AppsFlyer Log] ⚠️ SDK Init Timeout (20s) - Tiếp tục chạy App.",
         );
       },
     );
